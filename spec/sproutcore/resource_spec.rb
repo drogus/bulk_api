@@ -7,7 +7,7 @@ describe SproutCore::Resource do
     end
 
     before do
-      session = ActionDispatch::Integration::Session.new
+      session = ActionDispatch::Integration::Session.new(Rails.application)
       @resource = TasksResource.new(session)
     end
 
@@ -47,7 +47,7 @@ describe SproutCore::Resource do
 
         lambda {
           @resource.delete(tasks.map(&:id))
-        }.should change(Task, :count).by(2)
+        }.should change(Task, :count).by(-2)
 
       end
     end

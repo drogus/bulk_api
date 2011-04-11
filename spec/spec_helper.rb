@@ -18,6 +18,7 @@ RSpec.configure do |config|
   # methods or matchers
   require 'rspec/expectations'
   config.include RSpec::Matchers
+  config.use_transactional_fixtures = true
 
   # == Mock Framework
   config.mock_with :rspec
