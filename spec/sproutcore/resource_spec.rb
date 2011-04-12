@@ -17,9 +17,9 @@ describe Sproutcore::Resource do
         tasks = @resource.create([{:title => "Add more tests"},
                                   {:title => "Be nice", :done => true}])
 
-        tasks.first.title.should == "Add more tests"
-        tasks.second.title.should == "Be nice"
-        tasks.second.should be_done
+        tasks[:tasks].first.title.should == "Add more tests"
+        tasks[:tasks].second.title.should == "Be nice"
+        tasks[:tasks].second.should be_done
         Task.count.should == 2
       end
     end

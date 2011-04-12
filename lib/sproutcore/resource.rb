@@ -50,22 +50,22 @@ class Sproutcore::Resource
     { plural_resource_name.to_sym => klass.where(:id => ids) }
   end
 
-  def create(tasks)
-    tasks = tasks.map do |task|
-      klass.create(task)
+  def create(hashes)
+    records = hashes.map do |attrs|
+      klass.create(attrs)
     end
 
-    { plural_resource_name.to_sym => tasks }
+    { plural_resource_name.to_sym => records }
   end
 
-  def update(tasks)
-    tasks = tasks.map do |hash|
-      task = klass.find(hash[:id])
-      task.update_attributes(hash)
-      task
+  def update(hashes)
+    records = hashes.map do |attrs|
+      klass.find(attrs[:id]).tap do |record|
+        record.update_attributes(attrs)
+      end
     end
 
-    { plural_resource_name.to_sym => tasks }
+    { plural_resource_name.to_sym => records }
   end
 
   def delete(ids)
