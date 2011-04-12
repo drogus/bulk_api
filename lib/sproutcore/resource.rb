@@ -2,12 +2,42 @@ class Sproutcore::Resource
   attr_reader :session
 
   class << self
-    attr_accessor :resource_name
+    attr_accessor :resource_name, :resources
 
     def inherited(base)
       if base.name =~ /(.*)Resource$/
         base.resource_name = $1.underscore.singularize
       end
+    end
+
+    # TODO: should it belong here or maybe I should move it to Sproutcore::Engine or some other class?
+    def handle_response(method, session, params)
+      response = {}
+      params.each do |resource, hash|
+        next unless resources.include?(resource.to_sym)
+        klass = klass(session, resource)
+        response.merge! klass.send(method, hash)
+      end
+      response
+    end
+
+    %w/get create update delete/.each do |method|
+      define_method(method) do |session, params|
+        handle_response(method, session, params)
+      end
+    end
+
+    def klass(session, resource)
+      begin
+        "#{resource.to_s.pluralize}_resource".classify.constantize.new(session)
+      rescue NameError
+        new(session, :resource_name => resource)
+      end
+    end
+
+    def resources
+      # TODO: probably I should not depend on Sproutcore::Engine
+      Sproutcore::Engine.resources.map(&:to_sym)
     end
   end
 
@@ -17,29 +47,31 @@ class Sproutcore::Resource
   end
 
   def get(ids)
-    klass
-  end
-
-  def get(ids)
     { plural_resource_name.to_sym => klass.where(:id => ids) }
   end
 
   def create(tasks)
-    tasks.map do |task|
+    tasks = tasks.map do |task|
       klass.create(task)
     end
+
+    { plural_resource_name.to_sym => tasks }
   end
 
   def update(tasks)
-    tasks.map do |hash|
+    tasks = tasks.map do |hash|
       task = klass.find(hash[:id])
       task.update_attributes(hash)
       task
     end
+
+    { plural_resource_name.to_sym => tasks }
   end
 
   def delete(ids)
     ids.each { |id| klass.destroy(id) }
+
+    { plural_resource_name.to_sym => ids }
   end
 
   def plural_resource_name
@@ -56,15 +88,3 @@ class Sproutcore::Resource
     @_klass ||= resource_name.classify.constantize
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-
