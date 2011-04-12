@@ -83,6 +83,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  rack-test
   rails (= 3.0.6)
   rspec-rails
   sqlite3

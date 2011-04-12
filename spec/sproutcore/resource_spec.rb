@@ -1,16 +1,8 @@
 require 'spec_helper'
 require 'action_dispatch/testing/integration'
 
-describe SproutCore::Resource do
-  describe "standard resource" do
-    class TasksResource < SproutCore::Resource
-    end
-
-    before do
-      session = ActionDispatch::Integration::Session.new(Rails.application)
-      @resource = TasksResource.new(session)
-    end
-
+describe Sproutcore::Resource do
+  shared_examples_for "Sproutcore::Resource subclass" do
     context "#get" do
       it "should fetch all the records by ids" do
         tasks = [Task.create(:title => "First!"), Task.create(:title => "Foo")]
@@ -48,8 +40,30 @@ describe SproutCore::Resource do
         lambda {
           @resource.delete(tasks.map(&:id))
         }.should change(Task, :count).by(-2)
-
       end
     end
   end
+
+  describe "subclassed resource" do
+    class TasksResource < Sproutcore::Resource
+    end
+
+    before do
+      session = ActionDispatch::Integration::Session.new(Rails.application)
+      @resource = TasksResource.new(session)
+    end
+
+    it_behaves_like "Sproutcore::Resource subclass"
+  end
+
+  describe "not subclassed instance with resource name passed" do
+    before do
+      session = ActionDispatch::Integration::Session.new(Rails.application)
+      @resource = Sproutcore::Resource.new(session, :resource_name => :task)
+    end
+
+    it_behaves_like "Sproutcore::Resource subclass"
+  end
 end
+
+

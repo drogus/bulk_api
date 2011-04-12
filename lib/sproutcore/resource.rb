@@ -1,15 +1,19 @@
-class SproutCore::Resource
+class Sproutcore::Resource
   attr_reader :session
-  cattr_accessor :resource_name
 
-  def initialize(session)
-    @session = session
+  class << self
+    attr_accessor :resource_name
+
+    def inherited(base)
+      if base.name =~ /(.*)Resource$/
+        base.resource_name = $1.underscore.singularize
+      end
+    end
   end
 
-  def self.inherited(base)
-    if base.name =~ /(.*)Resource$/
-      self.resource_name = $1.underscore.singularize
-    end
+  def initialize(session, options = {})
+    @session = session
+    @resource_name = options[:resource_name].to_s if options[:resource_name]
   end
 
   def get(ids)
@@ -42,12 +46,14 @@ class SproutCore::Resource
     resource_name.pluralize
   end
 
-  delegate :resource_name, :to => "self.class"
+  def resource_name
+    @resource_name || self.class.resource_name
+  end
 
   private
   def klass
     # TODO: raise nice error if resource_name is not set
-    @_klass ||= self.class.resource_name.classify.constantize
+    @_klass ||= resource_name.classify.constantize
   end
 end
 
