@@ -1,3 +1,5 @@
+require 'sproutcore/routes'
+
 module Sproutcore
   class Engine < Rails::Engine
     def self.resources(*resources)

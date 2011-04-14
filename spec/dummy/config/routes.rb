@@ -1,10 +1,6 @@
 Dummy::Application.routes.draw do
-
-  # TODO: automate this
-  get    "/api/bulk" => "sproutcore/bulk#get"
-  post   "/api/bulk" => "sproutcore/bulk#create"
-  put    "/api/bulk" => "sproutcore/bulk#update"
-  delete "/api/bulk" => "sproutcore/bulk#delete"
+  match "/todos" => "tasks#index"
+  sproutcore("api/bulk")
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
