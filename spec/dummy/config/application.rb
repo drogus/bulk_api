@@ -43,3 +43,6 @@ module Dummy
     config.filter_parameters += [:password]
   end
 end
+
+Rails.backtrace_cleaner.remove_silencers!
+Sproutcore::Engine.resources :todos

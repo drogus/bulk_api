@@ -14,20 +14,27 @@ describe Sproutcore::Resource do
 
     context "#create" do
       it "should create records from given data hashes" do
-        tasks = @resource.create([{:title => "Add more tests"},
-                                  {:title => "Be nice", :done => true}])
+        hash = nil
+        lambda {
+          hash = @resource.create([{:title => "Add more tests", :_storeKey => 10},
+                                    {:title => "Be nice", :done => true, :_storeKey => 5}])
+        }.should change(Task, :count).by(2)
 
-        tasks[:tasks].first.title.should == "Add more tests"
-        tasks[:tasks].second.title.should == "Be nice"
-        tasks[:tasks].second.should be_done
-        Task.count.should == 2
+        task = hash[:tasks].first
+        task.title.should == "Add more tests"
+        task[:_storeKey].should == 10
+
+        task = hash[:tasks].second
+        task.title.should == "Be nice"
+        task.should be_done
+        task[:_storeKey].should == 5
       end
     end
 
     context "#update" do
       it "should update records from given data hashes" do
         task = Task.create(:title => "Learn teh internets!")
-        @resource.update([{:title => "Learn the internets!", :id => task.id}])
+        hash = @resource.update([{ :title => "Learn the internets!", :id => task.id }])
 
         task.reload.title.should == "Learn the internets!"
       end

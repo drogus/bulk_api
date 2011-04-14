@@ -52,7 +52,8 @@ class Sproutcore::Resource
 
   def create(hashes)
     records = hashes.map do |attrs|
-      klass.create(attrs)
+      store_key = attrs.delete(:_storeKey)
+      klass.create(attrs).tap { |r| r[:_storeKey] = store_key }
     end
 
     { plural_resource_name.to_sym => records }
@@ -60,6 +61,7 @@ class Sproutcore::Resource
 
   def update(hashes)
     records = hashes.map do |attrs|
+      attrs.delete(:_storeKey)
       klass.find(attrs[:id]).tap do |record|
         record.update_attributes(attrs)
       end
