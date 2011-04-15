@@ -46,8 +46,9 @@ class Sproutcore::Resource
     @resource_name = options[:resource_name].to_s if options[:resource_name]
   end
 
-  def get(ids)
-    { plural_resource_name.to_sym => klass.where(:id => ids) }
+  def get(ids = 'all')
+    objects = ids.to_s == 'all' ? klass.all : klass.where(:id => ids)
+    { plural_resource_name.to_sym => objects }
   end
 
   def create(hashes)

@@ -4,11 +4,23 @@ require 'action_dispatch/testing/integration'
 describe Sproutcore::Resource do
   shared_examples_for "Sproutcore::Resource subclass" do
     context "#get" do
-      it "should fetch all the records by ids" do
-        tasks = [Task.create(:title => "First!"), Task.create(:title => "Foo")]
-        hash = @resource.get tasks.map(&:id)
+      before do
+        @tasks = [Task.create(:title => "First!"), Task.create(:title => "Foo")]
+      end
 
-        hash[:tasks].should == tasks
+      it "should fetch records with given ids" do
+        hash = @resource.get @tasks.map(&:id)
+        hash[:tasks].should == @tasks
+      end
+
+      it "should fetch all the records with :all argument" do
+        hash = @resource.get :all
+        hash[:tasks].should == @tasks
+      end
+
+      it "should fetch all the records without arguments" do
+        hash = @resource.get
+        hash[:tasks].should == @tasks
       end
     end
 
@@ -17,7 +29,7 @@ describe Sproutcore::Resource do
         hash = nil
         lambda {
           hash = @resource.create([{:title => "Add more tests", :_storeKey => 10},
-                                    {:title => "Be nice", :done => true, :_storeKey => 5}])
+                                   {:title => "Be nice", :done => true, :_storeKey => 5}])
         }.should change(Task, :count).by(2)
 
         task = hash[:tasks].first
