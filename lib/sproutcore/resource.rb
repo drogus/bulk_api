@@ -14,8 +14,9 @@ class Sproutcore::Resource
     def handle_response(method, session, params)
       response = {}
       params.each do |resource, hash|
-        next unless resources.include?(resource.to_sym)
+        next unless resources.nil? || resources.include?(resource.to_sym)
         klass = klass(session, resource)
+        next unless klass
         response.deep_merge! klass.send(method, hash)
       end
       response
@@ -31,7 +32,10 @@ class Sproutcore::Resource
       begin
         "#{resource.to_s.pluralize}_resource".classify.constantize.new(session)
       rescue NameError
-        new(session, :resource_name => resource)
+        begin
+          new(session, :resource_name => resource)
+        rescue NameError
+        end
       end
     end
   end
@@ -39,6 +43,9 @@ class Sproutcore::Resource
   def initialize(session, options = {})
     @session = session
     @resource_name = options[:resource_name].to_s if options[:resource_name]
+
+    # try to get klass
+    klass
   end
 
   def get(ids = 'all')

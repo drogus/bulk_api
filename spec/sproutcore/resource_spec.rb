@@ -129,6 +129,23 @@ describe Sproutcore::Resource do
     end
   end
 
+  describe "without specifing available resources" do
+    before do
+      @old_resources = Sproutcore::Resource.resources
+      Sproutcore::Resource.resources = nil
+    end
+
+    after do
+      Sproutcore::Resource.resources = @old_resources
+    end
+
+    it "should skip resources that can't be resolved into classes" do
+      lambda {
+        Sproutcore::Resource.get(nil, :tasks => [1], :todos => [2])
+      }.should_not raise_error
+    end
+  end
+
   describe "subclassed resource" do
     class TasksResource < Sproutcore::Resource
     end
