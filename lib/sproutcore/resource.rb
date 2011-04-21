@@ -68,7 +68,7 @@ class Sproutcore::Resource
       record = klass.where(:id => attrs[:id]).first
       record.update_attributes(attrs) if record
       record
-    end
+    end.compact
 
     response(records, :errors_key => :id)
   end
