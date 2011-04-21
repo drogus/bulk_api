@@ -7,7 +7,7 @@ require "action_view/railtie"
 require "action_mailer/railtie"
 
 Bundler.require
-require "sproutcore"
+require "sproutcore_on_rails"
 
 module Dummy
   class Application < Rails::Application

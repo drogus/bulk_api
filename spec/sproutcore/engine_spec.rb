@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe Sproutcore::Engine do
   include Rack::Test::Methods
+
   def app
     Rails.application
   end
