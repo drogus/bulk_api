@@ -63,6 +63,14 @@ describe Sproutcore::Resource do
         task.reload.title.should == "Learn the internets!"
       end
 
+      it "should just skip non existing records without throwing an error" do
+        task = Task.create(:title => "Learn teh internets!")
+        hash = @resource.update([{:title => "blah!", :id => 1},
+                                 { :title => "Learn the internets!", :id => task.id }])
+
+        task.reload.title.should == "Learn the internets!"
+      end
+
       it "should return errors in a hash with id as index for records" do
         task = Task.create(:title => "Learn teh internets!")
         task1 = Task.create(:title => "Lame task")
@@ -79,29 +87,44 @@ describe Sproutcore::Resource do
     end
 
     context "#delete" do
+      it "should skip non existing records" do
+        task = Task.create(:title => "Learn teh internets!")
+        hash = @resource.delete(:tasks => [task.id, task.id + 1])
+
+        hash[:tasks].should == [task.id]
+      end
+
       it "should delete given records" do
-        Task.class_eval do
-          before_destroy :cant_delete
-          def cant_delete
-            if title != "First!"
-              errors.add(:base, "You can't destroy me noob!")
+        begin
+          Task.class_eval do
+            before_destroy :cant_delete
+            def cant_delete
+              if title != "First!"
+                errors.add(:base, "You can't destroy me noob!")
+              end
+            end
+          end
+
+          task = Task.create(:title => "First!")
+          task1 = Task.create(:title => "Foo")
+          tasks = [task, task1]
+
+          hash = nil
+          lambda {
+            hash = @resource.delete(tasks.map(&:id))
+          }.should change(Task, :count).by(-2)
+
+          hash[:tasks].should == [task.id]
+          errors = hash[:errors][:tasks]
+          errors.length.should == 1
+          errors[task1.id].should == {:base => ["You can't destroy me noob!"]}
+        ensure
+          Task.class_eval do
+            def cant_delete
+              true
             end
           end
         end
-
-        task = Task.create(:title => "First!")
-        task1 = Task.create(:title => "Foo")
-        tasks = [task, task1]
-
-        hash = nil
-        lambda {
-          hash = @resource.delete(tasks.map(&:id))
-        }.should change(Task, :count).by(-2)
-
-        hash[:tasks].should == [task.id]
-        errors = hash[:errors][:tasks]
-        errors.length.should == 1
-        errors[task1.id].should == {:base => ["You can't destroy me noob!"]}
       end
     end
   end

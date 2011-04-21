@@ -58,9 +58,9 @@ class Sproutcore::Resource
   def update(hashes)
     records = hashes.map do |attrs|
       attrs.delete(:_storeKey)
-      klass.find(attrs[:id]).tap do |record|
-        record.update_attributes(attrs)
-      end
+      record = klass.where(:id => attrs[:id]).first
+      record.update_attributes(attrs) if record
+      record
     end
 
     response(records, :errors_key => :id)
@@ -68,8 +68,10 @@ class Sproutcore::Resource
 
   def delete(ids)
     records = ids.map { |id|
-      klass.destroy(id)
-    }
+      record = klass.where(:id => id).first
+      record.destroy if record
+      record
+    }.compact
 
     response(records, :errors_key => :id, :only_ids => true)
   end
