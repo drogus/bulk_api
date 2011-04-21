@@ -19,7 +19,14 @@ describe Sproutcore::Engine do
       get "/api/bulk", { :tasks => [@task.id], :projects => [@project.id] }
 
       last_response.body.should include_json({ :tasks => [{:title => "Foo"}]})
-      last_response.body.should include_json({ :projects => []})
+      last_response.body.should include_json({ :projects => [{:name => "Sproutcore"}]})
+    end
+
+    it "should not raise on not found records" do
+      get "/api/bulk", { :tasks => [@task.id, @task.id + 1], :projects => [@project.id, @project.id + 1] }
+
+      last_response.body.should include_json({ :tasks => [{:title => "Foo"}]})
+      last_response.body.should include_json({ :projects => [{:name => "Sproutcore"}]})
     end
 
     it "should update given records" do
@@ -30,6 +37,25 @@ describe Sproutcore::Engine do
       @project.reload.name.should == "Rails"
     end
 
+    it "should return validation errors on update" do
+      task = Task.create(:title => "Bar")
+      project = Project.create(:name => "jQuery")
+
+      params =  { :tasks => [{:title => "Bar", :id => @task.id},
+                             {:title => nil, :id => task.id}],
+                  :projects => [{:name => "Rails", :id => @project.id},
+                                {:name => nil, :id => project.id}] }
+
+      put "/api/bulk", params
+
+      @task.reload.title.should == "Bar"
+      @project.reload.name.should == "Rails"
+
+      body = JSON.parse(last_response.body)
+      body['errors']['tasks'][task.id.to_s].should == {'title' => ["can't be blank"]}
+      body['errors']['projects'][project.id.to_s].should == {'name' => ["can't be blank"]}
+    end
+
     it "should create given records" do
       lambda {
         lambda {
@@ -37,6 +63,21 @@ describe Sproutcore::Engine do
                               :projects => [{:name => "Rails"}] }
         }.should change(Task, :count).by(1)
       }.should change(Project, :count).by(1)
+    end
+
+    it "should return validation errors on create" do
+      params =  { :tasks => [{:title => "Bar", :_storeKey => 10},
+                             {:title => nil, :_storeKey => 11}],
+                  :projects => [{:name => "Rails", :_storeKey => 12},
+                                {:name => nil, :_storeKey => 13}] }
+
+      post "/api/bulk", params
+
+      body = JSON.parse(last_response.body)
+      body['errors']['tasks']['11'].should == {'title' => ["can't be blank"]}
+      body['errors']['projects']['13'].should == {'name' => ["can't be blank"]}
+      body['tasks'].first['title'].should == "Bar"
+      body['projects'].first['name'].should == "Rails"
     end
 
     it "should delete given records" do

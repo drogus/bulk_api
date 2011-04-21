@@ -16,7 +16,7 @@ class Sproutcore::Resource
       params.each do |resource, hash|
         next unless resources.include?(resource.to_sym)
         klass = klass(session, resource)
-        response.merge! klass.send(method, hash)
+        response.deep_merge! klass.send(method, hash)
       end
       response
     end
@@ -33,11 +33,6 @@ class Sproutcore::Resource
       rescue NameError
         new(session, :resource_name => resource)
       end
-    end
-
-    def resources
-      # TODO: probably I should not depend on Sproutcore::Engine
-      Sproutcore::Engine.resources.map(&:to_sym)
     end
   end
 
@@ -57,7 +52,7 @@ class Sproutcore::Resource
       klass.create(attrs).tap { |r| r[:_storeKey] = store_key }
     end
 
-    { plural_resource_name.to_sym => records }
+    response(records)
   end
 
   def update(hashes)
@@ -68,13 +63,15 @@ class Sproutcore::Resource
       end
     end
 
-    { plural_resource_name.to_sym => records }
+    response(records, :errors_key => :id)
   end
 
   def delete(ids)
-    ids.each { |id| klass.destroy(id) }
+    records = ids.map { |id|
+      klass.destroy(id)
+    }
 
-    { plural_resource_name.to_sym => ids }
+    response(records, :errors_key => :id, :only_ids => true)
   end
 
   def plural_resource_name
@@ -89,5 +86,22 @@ class Sproutcore::Resource
   def klass
     # TODO: raise nice error if resource_name is not set
     @_klass ||= resource_name.classify.constantize
+  end
+
+  def response(records, options = {})
+    defaults = { :errors_key => :_storeKey }
+    options = defaults.merge(options)
+
+    valid, invalid = records.partition { |r| r.errors.length == 0 }
+    invalid = Hash[*invalid.map {|r| [r[options[:errors_key]], r.errors]}.flatten]
+
+    valid.map!(&:id) if options[:only_ids]
+
+    {
+      plural_resource_name.to_sym => valid,
+      :errors => {
+        plural_resource_name.to_sym => invalid
+      }
+    }
   end
 end

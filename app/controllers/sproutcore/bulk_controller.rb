@@ -14,5 +14,4 @@ class Sproutcore::BulkController < ActionController::Base
   def delete
     render :json => Sproutcore::Resource.delete(session, params)
   end
-
 end
