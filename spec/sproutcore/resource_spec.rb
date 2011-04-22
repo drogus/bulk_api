@@ -28,23 +28,23 @@ describe Sproutcore::Resource do
       it "should create records from given data hashes" do
         hash = nil
         lambda {
-          hash = @resource.create([{:title => "Add more tests", :_storeKey => 10},
-                                   {:title => "Be nice", :done => true, :_storeKey => 5}])
+          hash = @resource.create([{:title => "Add more tests", :_local_id => 10},
+                                   {:title => "Be nice", :done => true, :_local_id => 5}])
         }.should change(Task, :count).by(2)
 
         task = hash[:tasks].first
         task.title.should == "Add more tests"
-        task[:_storeKey].should == 10
+        task[:_local_id].should == 10
 
         task = hash[:tasks].second
         task.title.should == "Be nice"
         task.should be_done
-        task[:_storeKey].should == 5
+        task[:_local_id].should == 5
       end
 
-      it "should return errors in a hash with storeKey as index for records" do
-        hash = @resource.create([{:title => "Add more tests", :_storeKey => 10},
-                                 {:_storeKey => 11}])
+      it "should return errors in a hash with local_id as index for records" do
+        hash = @resource.create([{:title => "Add more tests", :_local_id => 10},
+                                 {:_local_id => 11}])
 
         errors = hash[:errors][:tasks]
         errors.length.should == 1
@@ -74,8 +74,8 @@ describe Sproutcore::Resource do
       it "should return errors in a hash with id as index for records" do
         task = Task.create(:title => "Learn teh internets!")
         task1 = Task.create(:title => "Lame task")
-        hash = @resource.update([{:id => task.id, :title => "Changed", :_storeKey => 10},
-                                 {:id => task1.id, :title => nil, :_storeKey => 11}])
+        hash = @resource.update([{:id => task.id, :title => "Changed", :_local_id => 10},
+                                 {:id => task1.id, :title => nil, :_local_id => 11}])
 
         errors = hash[:errors][:tasks]
         errors.length.should == 1

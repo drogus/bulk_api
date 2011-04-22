@@ -66,10 +66,10 @@ describe Sproutcore::Engine do
     end
 
     it "should return validation errors on create" do
-      params =  { :tasks => [{:title => "Bar", :_storeKey => 10},
-                             {:title => nil, :_storeKey => 11}],
-                  :projects => [{:name => "Rails", :_storeKey => 12},
-                                {:name => nil, :_storeKey => 13}] }
+      params =  { :tasks => [{:title => "Bar", :_local_id => 10},
+                             {:title => nil, :_local_id => 11}],
+                  :projects => [{:name => "Rails", :_local_id => 12},
+                                {:name => nil, :_local_id => 13}] }
 
       post "/api/bulk", params
 

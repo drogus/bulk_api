@@ -1,17 +1,25 @@
 class Sproutcore::BulkController < ActionController::Base
   def get
-    render :json => Sproutcore::Resource.get(session, params)
+    options = { :json => Sproutcore::Resource.get(session, params) }
+    yield options if block_given?
+    render options
   end
 
   def create
-    render :json => Sproutcore::Resource.create(session, params)
+    options = { :json => Sproutcore::Resource.create(session, params) }
+    yield options if block_given?
+    render options
   end
 
   def update
-    render :json => Sproutcore::Resource.update(session, params)
+    options = { :json => Sproutcore::Resource.update(session, params) }
+    yield options if block_given?
+    render options
   end
 
   def delete
-    render :json => Sproutcore::Resource.delete(session, params)
+    options = { :json => Sproutcore::Resource.delete(session, params) }
+    yield options if block_given?
+    render options
   end
 end

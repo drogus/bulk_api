@@ -55,8 +55,8 @@ class Sproutcore::Resource
 
   def create(hashes)
     records = hashes.map do |attrs|
-      store_key = attrs.delete(:_storeKey)
-      klass.create(attrs).tap { |r| r[:_storeKey] = store_key }
+      store_key = attrs.delete(:_local_id)
+      klass.create(attrs).tap { |r| r[:_local_id] = store_key }
     end
 
     response(records)
@@ -64,7 +64,7 @@ class Sproutcore::Resource
 
   def update(hashes)
     records = hashes.map do |attrs|
-      attrs.delete(:_storeKey)
+      attrs.delete(:_local_id)
       record = klass.where(:id => attrs[:id]).first
       record.update_attributes(attrs) if record
       record
@@ -98,7 +98,7 @@ class Sproutcore::Resource
   end
 
   def response(records, options = {})
-    defaults = { :errors_key => :_storeKey }
+    defaults = { :errors_key => :_local_id }
     options = defaults.merge(options)
 
     valid, invalid = records.partition { |r| r.errors.length == 0 }
