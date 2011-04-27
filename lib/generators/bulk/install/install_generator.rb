@@ -1,4 +1,4 @@
-module Sproutcore
+module Bulk
   module Generators
     class InstallGenerator < Rails::Generators::Base
 
@@ -12,11 +12,11 @@ DESC
       end
 
       def copy_config_initializers_sproutcore
-        template 'config/initializers/sproutcore.rb'
+        template 'config/initializers/bulk.rb'
       end
 
       def routes_entry
-        route 'sproutcore "/api/bulk"'
+        route 'bulk_routes "/api/bulk"'
       end
 
     end
