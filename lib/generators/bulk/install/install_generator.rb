@@ -11,7 +11,7 @@ DESC
         @source_root ||= File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
       end
 
-      def copy_config_initializers_sproutcore
+      def copy_config_initializers_bulk
         template 'config/initializers/bulk.rb'
       end
 

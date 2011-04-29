@@ -1,6 +1,6 @@
 Dummy::Application.routes.draw do
   match "/todos" => "tasks#index"
-  sproutcore("api/bulk")
+  bulk_routes("api/bulk")
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

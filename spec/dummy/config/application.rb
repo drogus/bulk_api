@@ -7,7 +7,7 @@ require "action_view/railtie"
 require "action_mailer/railtie"
 
 Bundler.require
-require "sproutcore_on_rails"
+require "bulk_api"
 
 module Dummy
   class Application < Rails::Application
@@ -45,4 +45,4 @@ module Dummy
 end
 
 Rails.backtrace_cleaner.remove_silencers!
-Sproutcore::Engine.resources :todos
+Bulk::Engine.resources :todos

@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'action_dispatch/testing/integration'
 
-describe Sproutcore::Resource do
-  shared_examples_for "Sproutcore::Resource subclass" do
+describe Bulk::Resource do
+  shared_examples_for "Bulk::Resource subclass" do
     context "#get" do
       before do
         @tasks = [Task.create(:title => "First!"), Task.create(:title => "Foo")]
@@ -131,23 +131,23 @@ describe Sproutcore::Resource do
 
   describe "without specifing available resources" do
     before do
-      @old_resources = Sproutcore::Resource.resources
-      Sproutcore::Resource.resources = nil
+      @old_resources = Bulk::Resource.resources
+      Bulk::Resource.resources = nil
     end
 
     after do
-      Sproutcore::Resource.resources = @old_resources
+      Bulk::Resource.resources = @old_resources
     end
 
     it "should skip resources that can't be resolved into classes" do
       lambda {
-        Sproutcore::Resource.get(nil, :tasks => [1], :todos => [2])
+        Bulk::Resource.get(nil, :tasks => [1], :todos => [2])
       }.should_not raise_error
     end
   end
 
   describe "subclassed resource" do
-    class TasksResource < Sproutcore::Resource
+    class TasksResource < Bulk::Resource
     end
 
     before do
@@ -155,16 +155,16 @@ describe Sproutcore::Resource do
       @resource = TasksResource.new(session)
     end
 
-    it_behaves_like "Sproutcore::Resource subclass"
+    it_behaves_like "Bulk::Resource subclass"
   end
 
   describe "not subclassed instance with resource name passed" do
     before do
       session = ActionDispatch::Integration::Session.new(Rails.application)
-      @resource = Sproutcore::Resource.new(session, :resource_name => :task)
+      @resource = Bulk::Resource.new(session, :resource_name => :task)
     end
 
-    it_behaves_like "Sproutcore::Resource subclass"
+    it_behaves_like "Bulk::Resource subclass"
   end
 end
 

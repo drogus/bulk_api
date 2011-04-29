@@ -1,4 +1,4 @@
-class Sproutcore::Resource
+class Bulk::Resource
   attr_reader :session
 
   class << self
@@ -10,7 +10,7 @@ class Sproutcore::Resource
       end
     end
 
-    # TODO: should it belong here or maybe I should move it to Sproutcore::Engine or some other class?
+    # TODO: should it belong here or maybe I should move it to Bulk::Engine or some other class?
     def handle_response(method, session, params)
       response = {}
       params.each do |resource, hash|

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Sproutcore::Engine do
+describe Bulk::Engine do
   include Rack::Test::Methods
 
   def app
@@ -9,7 +9,7 @@ describe Sproutcore::Engine do
 
   describe "bulk API" do
     before do
-      Sproutcore::Engine.resources :tasks, :projects
+      Bulk::Engine.resources :tasks, :projects
 
       @task = Task.create(:title => "Foo")
       @project = Project.create(:name => "Sproutcore")
@@ -92,7 +92,7 @@ describe Sproutcore::Engine do
 
   describe "bulk API with only :tasks enabled" do
     before do
-      Sproutcore::Engine.resources :tasks
+      Bulk::Engine.resources :tasks
 
       @task = Task.create(:title => "Foo")
       @project = Project.create(:name => "Sproutcore")

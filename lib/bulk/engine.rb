@@ -1,10 +1,10 @@
-require 'sproutcore/routes'
+require 'bulk/routes'
 
-module Sproutcore
+module Bulk
   class Engine < Rails::Engine
     def self.resources(*resources)
-      Sproutcore::Resource.resources = resources if resources.length > 0
-      Sproutcore::Resource.resources
+      Bulk::Resource.resources = resources if resources.length > 0
+      Bulk::Resource.resources
     end
 
     initializer "do not include root in json" do
