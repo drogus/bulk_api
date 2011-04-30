@@ -52,8 +52,8 @@ describe Bulk::Engine do
       @project.reload.name.should == "Rails"
 
       body = JSON.parse(last_response.body)
-      body['errors']['tasks'][task.id.to_s].should == {'title' => ["can't be blank"]}
-      body['errors']['projects'][project.id.to_s].should == {'name' => ["can't be blank"]}
+      body['errors']['tasks'][task.id.to_s].should == {'type' => 'invalid', 'data' => {'title' => ["can't be blank"]}}
+      body['errors']['projects'][project.id.to_s].should == {'type' => 'invalid', 'data' => {'name' => ["can't be blank"]}}
     end
 
     it "should create given records" do
@@ -74,8 +74,8 @@ describe Bulk::Engine do
       post "/api/bulk", params
 
       body = JSON.parse(last_response.body)
-      body['errors']['tasks']['11'].should == {'title' => ["can't be blank"]}
-      body['errors']['projects']['13'].should == {'name' => ["can't be blank"]}
+      body['errors']['tasks']['11'].should == {'type' => 'invalid', 'data' => {'title' => ["can't be blank"]}}
+      body['errors']['projects']['13'].should == {'type' => 'invalid', 'data' => {'name' => ["can't be blank"]}}
       body['tasks'].first['title'].should == "Bar"
       body['projects'].first['name'].should == "Rails"
     end

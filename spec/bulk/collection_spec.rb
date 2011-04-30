@@ -52,6 +52,13 @@ describe Bulk::Collection do
     collection.exists?(1)
   end
 
+  specify "#ids should return record ids" do
+    second_record = Object.new
+    collection.set(1, record)
+    collection.set(10, second_record)
+    collection.ids.sort.should == ['1', '10']
+  end
+
   context "errors" do
     before do
       collection.set(1, record)
@@ -59,12 +66,12 @@ describe Bulk::Collection do
 
     specify "#set(id, error) should add error for record with given id" do
       collection.errors.set(1, :invalid)
-      collection.errors.get(1).should == :invalid
+      collection.errors.get(1).type.should == :invalid
     end
 
     specify "#delete(id) should delete error for given id" do
       collection.errors.set(1, :invalid)
-      collection.errors.get(1).should == :invalid
+      collection.errors.get(1).type.should == :invalid
       collection.errors.delete(1)
       collection.errors.get(1).should == nil
     end

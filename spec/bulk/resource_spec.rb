@@ -9,79 +9,80 @@ describe Bulk::Resource do
       end
 
       it "should fetch records with given ids" do
-        hash = @resource.get @tasks.map(&:id)
-        hash[:tasks].should == @tasks
+        collection = @resource.get @tasks.map(&:id)
+        collection.ids.sort.should == @tasks.map {|t| t.id.to_s }.sort
       end
 
       it "should fetch all the records with :all argument" do
-        hash = @resource.get :all
-        hash[:tasks].should == @tasks
+        collection = @resource.get :all
+        collection.length.should == 2
+        collection.ids.sort.should == @tasks.map {|t| t.id.to_s }.sort
       end
 
       it "should fetch all the records without arguments" do
-        hash = @resource.get
-        hash[:tasks].should == @tasks
+        collection = @resource.get
+        collection.length.should == 2
+        collection.ids.sort.should == @tasks.map {|t| t.id.to_s }.sort
       end
     end
 
     context "#create" do
       it "should create records from given data hashes" do
-        hash = nil
+        collection = nil
         lambda {
-          hash = @resource.create([{:title => "Add more tests", :_local_id => 10},
-                                   {:title => "Be nice", :done => true, :_local_id => 5}])
+          collection = @resource.create([{:title => "Add more tests", :_local_id => 10},
+                                         {:title => "Be nice", :done => true, :_local_id => 5}])
         }.should change(Task, :count).by(2)
 
-        task = hash[:tasks].first
+        task = collection.get(10)
         task.title.should == "Add more tests"
         task[:_local_id].should == 10
 
-        task = hash[:tasks].second
+        task = collection.get(5)
         task.title.should == "Be nice"
         task.should be_done
         task[:_local_id].should == 5
       end
 
       it "should return errors in a hash with local_id as index for records" do
-        hash = @resource.create([{:title => "Add more tests", :_local_id => 10},
-                                 {:_local_id => 11}])
+        collection = @resource.create([{:title => "Add more tests", :_local_id => 10},
+                                       {:_local_id => 11}])
 
-        errors = hash[:errors][:tasks]
-        errors.length.should == 1
-        errors[11].should == {:title => ["can't be blank"]}
-        hash[:tasks].first.title.should == "Add more tests"
-        hash[:tasks].length.should == 1
+        error = collection.errors.get(11)
+        error.data.should == {:title => ["can't be blank"]}
+        error.type.should == :invalid
+        collection.get(10).title.should == "Add more tests"
       end
-
     end
 
     context "#update" do
       it "should update records from given data hashes" do
         task = Task.create(:title => "Learn teh internets!")
-        hash = @resource.update([{ :title => "Learn the internets!", :id => task.id }])
+        collection = @resource.update([{ :title => "Learn the internets!", :id => task.id }])
 
         task.reload.title.should == "Learn the internets!"
       end
 
       it "should just skip non existing records without throwing an error" do
         task = Task.create(:title => "Learn teh internets!")
-        hash = @resource.update([{:title => "blah!", :id => 1},
-                                 { :title => "Learn the internets!", :id => task.id }])
+        collection = @resource.update([{:title => "blah!", :id => 1},
+                                       { :title => "Learn the internets!", :id => task.id }])
 
         task.reload.title.should == "Learn the internets!"
+        collection.length.should == 1
       end
 
-      it "should return errors in a hash with id as index for records" do
+      it "should return collection with errors" do
         task = Task.create(:title => "Learn teh internets!")
         task1 = Task.create(:title => "Lame task")
-        hash = @resource.update([{:id => task.id, :title => "Changed", :_local_id => 10},
-                                 {:id => task1.id, :title => nil, :_local_id => 11}])
+        collection = @resource.update([{:id => task.id, :title => "Changed", :_local_id => 10},
+                                       {:id => task1.id, :title => nil, :_local_id => 11}])
 
-        errors = hash[:errors][:tasks]
-        errors.length.should == 1
-        errors[task1.id].should == {:title => ["can't be blank"]}
-        hash[:tasks].first.title.should == "Changed"
-        hash[:tasks].length.should == 1
+        error = collection.errors.get(task1.id)
+        error.type.should == :invalid
+        error.data.should == {:title => ["can't be blank"]}
+        collection.get(task.id).title.should == "Changed"
+        collection.length.should == 2
       end
 
     end
@@ -89,9 +90,9 @@ describe Bulk::Resource do
     context "#delete" do
       it "should skip non existing records" do
         task = Task.create(:title => "Learn teh internets!")
-        hash = @resource.delete(:tasks => [task.id, task.id + 1])
+        collection = @resource.delete(:tasks => [task.id, task.id + 1])
 
-        hash[:tasks].should == [task.id]
+        collection.ids.should == [task.id.to_s]
       end
 
       it "should delete given records" do
@@ -109,15 +110,14 @@ describe Bulk::Resource do
           task1 = Task.create(:title => "Foo")
           tasks = [task, task1]
 
-          hash = nil
+          collection = nil
           lambda {
-            hash = @resource.delete(tasks.map(&:id))
+            collection = @resource.delete(tasks.map(&:id))
           }.should change(Task, :count).by(-2)
 
-          hash[:tasks].should == [task.id]
-          errors = hash[:errors][:tasks]
-          errors.length.should == 1
-          errors[task1.id].should == {:base => ["You can't destroy me noob!"]}
+          error = collection.errors.get(task1.id)
+          error.data.should == {:base => ["You can't destroy me noob!"]}
+          error.type.should == :invalid
         ensure
           Task.class_eval do
             def cant_delete
