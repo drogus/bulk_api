@@ -2,6 +2,12 @@ require 'spec_helper'
 require 'action_dispatch/testing/integration'
 
 describe Bulk::Resource do
+  it "should raise error when trying to inherit from it while some other class already inherits from it" do
+    lambda do
+      Class.new(Bulk::Resource)
+    end.should raise_error("Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: AbstractResource)")
+  end
+
   shared_examples_for "Bulk::Resource subclass" do
     context "#get" do
       before do
@@ -147,7 +153,7 @@ describe Bulk::Resource do
   end
 
   describe "subclassed resource" do
-    class TasksResource < Bulk::Resource
+    class TasksResource < AbstractResource
     end
 
     before do

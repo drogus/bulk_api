@@ -14,7 +14,7 @@ describe 'Install generator' do
     end
   end
 
-  it 'generates file in app/bulk/ dir' do
+  it 'generates appropriate files' do
     run_generator
 
     destination_root.should have_structure {
@@ -23,6 +23,9 @@ describe 'Install generator' do
       end
       file "config/routes.rb" do
         contains 'bulk_routes "/api/bulk"'
+      end
+      file "app/bulk/abstract_resource.rb" do
+        contains "class AbstractResource\n\nend\n"
       end
     }
   end

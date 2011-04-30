@@ -1,15 +1,40 @@
 module Bulk
   class Resource
-    attr_reader :session
-
-    class << self
-      attr_accessor :resource_name, :resources
-
+    module AbstractResourceMixin
       def inherited(base)
         if base.name =~ /(.*)Resource$/
           base.resource_name = $1.underscore.singularize
         end
       end
+    end
+
+    attr_reader :session
+
+    class << self
+      attr_accessor :resource_name, :resources
+      attr_accessor :abstract_resource_class
+
+      def inherited(base)
+        if abstract_resource_class
+          if self.name == "Bulk::Resource"
+            raise "Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: #{abstract_resource_class.inspect})"
+          else
+            super
+            return
+          end
+        end
+
+        self.abstract_resource_class = base
+        base.extend AbstractResourceMixin
+      end
+
+      %w/get create update delete/.each do |method|
+        define_method(method) do |session, params|
+          handle_response(method, session, params)
+        end
+      end
+
+      private
 
       # TODO: should it belong here or maybe I should move it to Bulk::Engine or some other class?
       def handle_response(method, session, params)
@@ -22,12 +47,6 @@ module Bulk
           response.deep_merge! collection.to_hash(resource_object.plural_resource_name)
         end
         response
-      end
-
-      %w/get create update delete/.each do |method|
-        define_method(method) do |session, params|
-          handle_response(method, session, params)
-        end
       end
 
       def instantiate(session, resource)
