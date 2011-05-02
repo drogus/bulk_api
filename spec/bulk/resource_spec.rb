@@ -8,6 +8,66 @@ describe Bulk::Resource do
     end.should raise_error("Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: AbstractResource)")
   end
 
+  context "global authentication" do
+    it "should run authentication callback before handling request" do
+      abstract_resource = Class.new do
+        cattr_accessor :authenticated
+        self.authenticated = false
+
+        define_method(:authenticate) do
+          self.class.authenticated = true
+        end
+      end
+      Bulk::Resource.abstract_resource_class = abstract_resource
+
+      controller = mock("controlelr", :params => {})
+      result = Bulk::Resource.get(controller)
+      abstract_resource.authenticated.should == true
+      result[:status].should be_nil
+    end
+
+    it "should set 401 status if authentication fails" do
+      abstract_resource = Class.new do
+        define_method(:authenticate) { false }
+      end
+      Bulk::Resource.abstract_resource_class = abstract_resource
+
+      controller = mock("controlelr", :params => {})
+      result = Bulk::Resource.get(controller)
+      result[:status].should == 401
+    end
+  end
+
+  context "global authorization" do
+    it "should run authorization callback before handling request" do
+      abstract_resource = Class.new do
+        cattr_accessor :authorized
+        self.authorized = false
+
+        define_method(:authorize) do
+          self.class.authorized = true
+        end
+      end
+      Bulk::Resource.abstract_resource_class = abstract_resource
+
+      controller = mock("controlelr", :params => {})
+      result = Bulk::Resource.get(controller)
+      abstract_resource.authorized.should == true
+      result[:status].should be_nil
+    end
+
+    it "should set 403 status if authentication fails" do
+      abstract_resource = Class.new do
+        define_method(:authorize) { false }
+      end
+      Bulk::Resource.abstract_resource_class = abstract_resource
+
+      controller = mock("controlelr", :params => {})
+      result = Bulk::Resource.get(controller)
+      result[:status].should == 403
+    end
+  end
+
   shared_examples_for "Bulk::Resource subclass" do
     context "#get" do
       before do
@@ -147,7 +207,8 @@ describe Bulk::Resource do
 
     it "should skip resources that can't be resolved into classes" do
       lambda {
-        Bulk::Resource.get(nil, :tasks => [1], :todos => [2])
+        controller = mock("controller", :params => { :tasks => [1], :todos => [2] })
+        Bulk::Resource.get(controller)
       }.should_not raise_error
     end
   end
@@ -157,8 +218,8 @@ describe Bulk::Resource do
     end
 
     before do
-      session = ActionDispatch::Integration::Session.new(Rails.application)
-      @resource = TasksResource.new(session)
+      controller = mock("controller", :params => {})
+      @resource = TasksResource.new(controller)
     end
 
     it_behaves_like "Bulk::Resource subclass"
@@ -166,8 +227,8 @@ describe Bulk::Resource do
 
   describe "not subclassed instance with resource name passed" do
     before do
-      session = ActionDispatch::Integration::Session.new(Rails.application)
-      @resource = Bulk::Resource.new(session, :resource_name => :task)
+      controller = mock("controller", :params => {})
+      @resource = Bulk::Resource.new(controller, :resource_name => :task)
     end
 
     it_behaves_like "Bulk::Resource subclass"

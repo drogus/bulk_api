@@ -1,24 +1,24 @@
 class Bulk::ApiController < ActionController::Base
   def get
-    options = { :json => Bulk::Resource.get(session, params) }
+    options = Bulk::Resource.get(self)
     yield options if block_given?
     render options
   end
 
   def create
-    options = { :json => Bulk::Resource.create(session, params) }
+    options = Bulk::Resource.create(self)
     yield options if block_given?
     render options
   end
 
   def update
-    options = { :json => Bulk::Resource.update(session, params) }
+    options = Bulk::Resource.update(self)
     yield options if block_given?
     render options
   end
 
   def delete
-    options = { :json => Bulk::Resource.delete(session, params) }
+    options = Bulk::Resource.delete(self)
     yield options if block_given?
     render options
   end

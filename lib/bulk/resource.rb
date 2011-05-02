@@ -1,4 +1,7 @@
 module Bulk
+  class AuthenticationError < StandardError; end
+  class AuthorizationError < StandardError; end
+
   class Resource
     module AbstractResourceMixin
       def inherited(base)
@@ -8,11 +11,14 @@ module Bulk
       end
     end
 
-    attr_reader :session
+    attr_reader :controller
+    delegate :session, :params, :to => :controller
 
     class << self
       attr_accessor :resource_name, :resources
       attr_accessor :abstract_resource_class
+      attr_reader :abstract
+      alias_method :abstract?, :abstract
 
       def inherited(base)
         if abstract_resource_class
@@ -25,48 +31,70 @@ module Bulk
         end
 
         self.abstract_resource_class = base
+        base.abstract!
         base.extend AbstractResourceMixin
       end
 
       %w/get create update delete/.each do |method|
-        define_method(method) do |session, params|
-          handle_response(method, session, params)
+        define_method(method) do |controller|
+          handle_response(method, controller)
         end
       end
+
+      def abstract!
+        @abstract = true
+      end
+      protected :abstract!
 
       private
 
       # TODO: should it belong here or maybe I should move it to Bulk::Engine or some other class?
-      def handle_response(method, session, params)
+      # TODO: refactor this to some kind of Response class
+      def handle_response(method, controller)
         response = {}
-        params.each do |resource, hash|
+        abstract_resource = abstract_resource_class.new(controller)
+
+        if abstract_resource.respond_to?(:authenticate)
+          raise AuthenticationError unless abstract_resource.authenticate
+        end
+
+        if abstract_resource.respond_to?(:authorize)
+          raise AuthorizationError unless abstract_resource.authorize
+        end
+
+        controller.params.each do |resource, hash|
           next unless resources.nil? || resources.include?(resource.to_sym)
-          resource_object = instantiate(session, resource)
+          resource_object = instantiate_resource_class(controller, resource)
           next unless resource_object
           collection = resource_object.send(method, hash)
           response.deep_merge! collection.to_hash(resource_object.plural_resource_name)
         end
-        response
+
+        { :json => response }
+      rescue AuthenticationError
+        { :status => 401 }
+      rescue AuthorizationError
+        { :status => 403 }
       end
 
-      def instantiate(session, resource)
+      def instantiate_resource_class(controller, resource)
         begin
-          "#{resource.to_s.pluralize}_resource".classify.constantize.new(session)
+          "#{resource.to_s.pluralize}_resource".classify.constantize.new(controller)
         rescue NameError
           begin
-            new(session, :resource_name => resource)
+            new(controller, :resource_name => resource)
           rescue NameError
           end
         end
       end
     end
 
-    def initialize(session, options = {})
-      @session = session
+    def initialize(controller, options = {})
+      @controller = controller
       @resource_name = options[:resource_name].to_s if options[:resource_name]
 
       # try to get klass
-      klass
+      klass unless abstract?
     end
 
     def get(ids = 'all')
@@ -122,6 +150,8 @@ module Bulk
     end
 
     private
+    delegate :abstract?, :to => "self.class"
+
     def set_with_validity_check(collection, id, record)
       collection.set(id, record)
       unless record.errors.empty?
