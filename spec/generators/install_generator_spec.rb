@@ -22,7 +22,7 @@ describe 'Install generator' do
         contains 'bulk_routes "/api/bulk"'
       end
       file "app/bulk/abstract_resource.rb" do
-        contains "AbstractResource"
+        contains "class AbstractResource < Bulk::Resource"
         contains "# resources :tasks, :projects"
       end
     }

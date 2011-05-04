@@ -14,9 +14,10 @@ module Bulk
     attr_reader :controller
     delegate :session, :params, :to => :controller
     delegate :resource_class, :to => "self.class"
+    @@resources = []
 
     class << self
-      attr_accessor :abstract_resource_class
+      attr_writer :abstract_resource_class
       attr_reader :abstract
       alias_method :abstract?, :abstract
 
@@ -35,8 +36,12 @@ module Bulk
         @@resources
       end
 
+      def abstract_resource_class
+        @abstract_resource_class ||= AbstractResource
+      end
+
       def inherited(base)
-        if abstract_resource_class
+        if @abstract_resource_class
           if self.name == "Bulk::Resource"
             raise "Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: #{abstract_resource_class.inspect})"
           else
