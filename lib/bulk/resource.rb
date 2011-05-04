@@ -6,7 +6,7 @@ module Bulk
     module AbstractResourceMixin
       def inherited(base)
         if base.name =~ /(.*)Resource$/
-          base.resource_name = $1.underscore.singularize
+          base.resource_name($1.underscore.singularize)
         end
       end
     end
@@ -16,7 +16,7 @@ module Bulk
     delegate :resource_class, :to => "self.class"
 
     class << self
-      attr_accessor :resource_name, :resources
+      attr_accessor :resources
       attr_accessor :abstract_resource_class
       attr_reader :abstract
       alias_method :abstract?, :abstract
@@ -24,6 +24,11 @@ module Bulk
       def resource_class(klass = nil)
         @resource_class = klass if klass
         @resource_class
+      end
+
+      def resource_name(name = nil)
+        @resource_name = name if name
+        @resource_name
       end
 
       def inherited(base)
@@ -54,7 +59,6 @@ module Bulk
 
       private
 
-      # TODO: should it belong here or maybe I should move it to Bulk::Engine or some other class?
       # TODO: refactor this to some kind of Response class
       def handle_response(method, controller)
         response = {}
@@ -235,10 +239,12 @@ module Bulk
     end
 
     def klass
-      # TODO: raise nice error if resource_name is not set
-      @_klass ||= (resource_class || resource_name.classify.constantize)
+      @_klass ||= begin
+        resource_class || (resource_name ? resource_name.classify.constantize : nil) ||
+          raise("Could not get resource class, please either set resource_class or resource_name that matches model that you want to use")
+      rescue NameError
+        raise NameError.new("Could not find class matching your resource_name (#{resource_name} - we were looking for #{resource_name.classify})")
+      end
     end
   end
 end
-
-

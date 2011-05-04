@@ -23,6 +23,21 @@ describe Bulk::Resource do
     collection.get(task.id).should == task
   end
 
+  it "should raise custom error if resource_name is not set properly" do
+    klass = Class.new(AbstractResource) do
+    end
+
+    lambda { klass.new(nil) }.should raise_error("Could not get resource class, please either set resource_class or resource_name that matches model that you want to use")
+  end
+
+  it "should raise custom error if class cannot be found using resource_name" do
+    klass = Class.new(AbstractResource) do
+      resource_name "something"
+    end
+
+    lambda { klass.new(nil) }.should raise_error("Could not find class matching your resource_name (something - we were looking for Something)")
+  end
+
   context "" do
     before do
       Object.send(:remove_const, :AbstractResource)
