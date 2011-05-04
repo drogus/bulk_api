@@ -1,3 +1,0 @@
-= Sproutcore-rails
-
-Easy sproutcore and rails integration.
