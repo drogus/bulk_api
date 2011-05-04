@@ -30,8 +30,7 @@ The last thing that you need to do is to set resource names for your models. Bul
 
 ```javascript
 Todos.Todo = SC.Record.extend({
-  resourceName: 'todo',
-  ...
+  resourceName: 'todo'
 })
 ```
 
@@ -70,9 +69,38 @@ The methods used for records manipulation are:
 * update
 * delete
 
-### Authorization callbacks
+### Authentication callbacks
 
 There are 3 kind of authorization callbacks that you can use. Each of them represents differnet level of handling records:
+
+* authenticate(action) - that callback is executed before handling the request, if it returns false, the entire response gets 401 status
+* authenticate_records(action, klass) - this callback is run before handling each type of resource, if it returns false, `not_authenticated` error is added to all of the records from given resource type. The class of the resource is passed as an argument.
+* authenticate_record(action, record) - this callback is run for each of the records, if it returns false, `not_authenticated` error is added to the given record
+
+Let's see example usage of each of this callbacks types:
+
+```ruby
+class AbstractResource < Bulk::Resource
+  # delegate all the things that we need from controller
+  delegate current_user, :can?, :to => :controller
+
+  def authenticate(action)
+    current_user.logged_in?
+  end
+
+  def authenticate_records(action, klass)
+  end
+
+  def authenticate_record(action, record)
+  end
+end
+```
+
+### Authorization callbacks
+
+Authorization callbacks are very similar to authentication
+callbacks. Notice that authorization callbacks will only be run when
+authentication callback succeeds.
 
 * authorize(action) - that callback is executed before handling the request, if it returns false, the entire response gets 403 status
 * authorize_records(action, klass) - this callback is run before handling each type of resource, if it returns false, 403 error is added to all of the records from given resource type. The class of the resource is passed as an argument.
@@ -84,18 +112,18 @@ Let's see example usage of each of this callbacks types.
 class AbstractResource < Bulk::Resource
   # delegate all the things that we need from controller
   delegate current_user, :can?, :to => :controller
-  
+
   def authorize(action)
     current_user.is_admin?
   end
-  
+
   def authorize_records(action, klass)
     # klass can be for example Project
     if action == :update
       can? :update, klass
     end
   end
-  
+
   def authorize_record(action, record)
     can? action, record # action returns one of the 4 actions (get, create, update, delete),
                         # so this will check if user can perform given type of action on
@@ -103,65 +131,6 @@ class AbstractResource < Bulk::Resource
   end
 end
 ```
-
-### Authentication callback
-
-If you want to handle authentication, you can use callbacks similar to authorization ones:
-
-* authenticate(action)
-* authenticate_records(action, klass)
-* authenticate_record(action, record)
-
-class AbstractResource < Bulk::Resource
-  # delegate all the things that we need from controller
-  delegate current_user, :can?, :to => :controller
-  
-  def authenticate(action)
-    current_user.logged_in?
-  end
-  
-  def authenticate_records(action, klass)
-  end
-  
-  def authenticate_record(action, record)
-  end
-end
-
-#### Basic attributes and params filtering
-
-While preparing your API, you will probably need to filter parameters that user can set on your models. The easiest way to do it is to set params_accessible or params_protected:
-
-
-```ruby
-class AbstractResource < Bulk::Resource
-  params_accessible :tasks    => [:title, :done],
-                    :projects => [:name]
-end
-```
-
-You can also set it for individual resource classes. In such case this will overwrite the one that's set in AbstractResource.
-
-If you want to filter the attributes that are sent in a response, just use standard Rails mechanism for that - override as_json method in your model:
-
-```ruby
-class MyModel < ActiveRecord::Base
-  def as_json(options={})
-    super(:only => [:email, :avatar], :include =>[:addresses])
-  end
-end
-```
-
-### Advanced params and attributes filtering
-
-If you have application with advanced permissions system, the chance are, you will have to filter both parameters and models' attributes. This gets tricky, because it's not easy to generate different set of attributes for the same model using as_json method. To make that easier without overriding a bunch of methods, you can use params and attributes callbacks:
-
-class AbstractResource < Bulk::Resource
-
-  def filter_params(record)
-    
-  end
-
-end
 
 ### Specific resource classes
 
@@ -187,9 +156,9 @@ class TaskResource < Sproutcore::Resource
 
   def get(ids)
     # ids is an array with records that we need to fetch
-    
+
     collection = super(ids)
-    
+
     # collection is an instance of Bulk::Collection class that keeps
     # fetched records, please check the rest of the README and the docs
     # to see how you can manipulate records in collection
@@ -203,12 +172,12 @@ class TaskResource < Sproutcore::Resource
     #  {:title => "", :done => true, :_local_id => 3}]
     # _local_id is needed to identify the records in sproutcore
     # application, since they do not have an id yet
-    
+
     collection = super(records)
-    
+
     collection
   end
-  
+
   def update(records)
     # records array is very similar to the array from create method,
     # but this time we should get data with id, like:
@@ -216,13 +185,13 @@ class TaskResource < Sproutcore::Resource
     #  {:id => 2, :title => ""}]
 
     collection = super(records)
-    
+
     collection
   end
-  
+
   def delete(ids)
     # similarly to get method, we get array of ids to delete
-    
+
     collection = super(ids)
 
     collection
@@ -240,7 +209,7 @@ Bulk::Collection is a container for records and is used to construct response fr
 collection = Bulk::Colection.new
 collection.set(1, record) # add record with identifier '1', identifier is then used while constructing response
                           # most of the time it's id or _local_id (the latter one is mainly for create)
-                          
+
 collection.errors.set(1, :access_denied) # add error that will be passed to DataSource
                                          # notice that these errors are not the same as validation errors,
                                          # this is more general way to tell DataSource what's going on
