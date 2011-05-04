@@ -45,4 +45,3 @@ module Dummy
 end
 
 Rails.backtrace_cleaner.remove_silencers!
-Bulk::Engine.resources :todos

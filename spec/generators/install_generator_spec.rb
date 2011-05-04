@@ -18,14 +18,12 @@ describe 'Install generator' do
     run_generator
 
     destination_root.should have_structure {
-      file "config/initializers/bulk.rb" do
-        contains "# Bulk::Engine.resources :tasks, :projects"
-      end
       file "config/routes.rb" do
         contains 'bulk_routes "/api/bulk"'
       end
       file "app/bulk/abstract_resource.rb" do
-        contains "class AbstractResource\n\nend\n"
+        contains "AbstractResource"
+        contains "# resources :tasks, :projects"
       end
     }
   end

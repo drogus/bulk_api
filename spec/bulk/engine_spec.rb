@@ -7,9 +7,15 @@ describe Bulk::Engine do
     Rails.application
   end
 
+  after do
+    clean_abstract_resource_class
+  end
+
   describe "bulk API" do
     before do
-      Bulk::Engine.resources :tasks, :projects
+      create_abstract_resource_class do
+        resources :tasks, :projects
+      end
 
       @task = Task.create(:title => "Foo")
       @project = Project.create(:name => "Sproutcore")
@@ -92,7 +98,9 @@ describe Bulk::Engine do
 
   describe "bulk API with only :tasks enabled" do
     before do
-      Bulk::Engine.resources :tasks
+      create_abstract_resource_class do
+        resources :tasks
+      end
 
       @task = Task.create(:title => "Foo")
       @project = Project.create(:name => "Sproutcore")

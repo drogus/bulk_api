@@ -16,7 +16,6 @@ module Bulk
     delegate :resource_class, :to => "self.class"
 
     class << self
-      attr_accessor :resources
       attr_accessor :abstract_resource_class
       attr_reader :abstract
       alias_method :abstract?, :abstract
@@ -29,6 +28,11 @@ module Bulk
       def resource_name(name = nil)
         @resource_name = name if name
         @resource_name
+      end
+
+      def resources(*resources)
+        @@resources = resources unless resources.blank?
+        @@resources
       end
 
       def inherited(base)
@@ -54,6 +58,7 @@ module Bulk
 
       def abstract!
         @abstract = true
+        @@resources = []
       end
       protected :abstract!
 
@@ -73,7 +78,7 @@ module Bulk
         end
 
         controller.params.each do |resource, hash|
-          next unless resources.nil? || resources.include?(resource.to_sym)
+          next unless resources.blank? || resources.include?(resource.to_sym)
           resource_object = instantiate_resource_class(controller, resource)
           next unless resource_object
           collection = resource_object.send(method, hash)
