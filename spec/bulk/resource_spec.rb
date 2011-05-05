@@ -2,6 +2,44 @@ require 'spec_helper'
 require 'action_dispatch/testing/integration'
 
 describe Bulk::Resource do
+  def standard_get
+    @task    = Task.create(:title => 'task')
+    @project = Project.create(:name => 'project')
+    controller = mock("controller", :params => {:tasks => [@task.id], :projects => [@project.id]})
+    Bulk::Resource.get(controller)
+  end
+
+  def standard_update
+    @task    = Task.create(:title => 'task')
+    @project = Project.create(:name => 'project')
+    params = {
+      :projects => [{:_local_id => '10', :name => 'SproutCore', :id => @project.id}],
+      :tasks => [{:_local_id => '5', :title => 'My task', :id => @task.id}]
+    }
+    controller = mock("controller", :params => params)
+    Bulk::Resource.update(controller)
+  end
+
+  def standard_create
+    params = {
+      :projects => [{:_local_id => '10', :name => 'SproutCore'}],
+      :tasks => [{:_local_id => '5', :title => 'My task'}]
+    }
+    controller = mock("controller", :params => params)
+    Bulk::Resource.create(controller)
+  end
+
+  def standard_delete
+    @task    = Task.create(:title => 'task')
+    @project = Project.create(:name => 'project')
+    params = {
+      :projects => [@project.id],
+      :tasks => [@task.id]
+    }
+    controller = mock("controller", :params => params)
+    Bulk::Resource.delete(controller)
+  end
+
   after do
     clean_abstract_resource_class
   end
@@ -175,23 +213,18 @@ describe Bulk::Resource do
       end
 
       it "should run before get request" do
-        controller = mock("controller", :params => {:tasks => [1], :projects => [2]})
-        result = Bulk::Resource.get(controller)
+        standard_get
         @klass.actions.should   == [:get] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not fetch records that were not authenticated" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-
         @klass.result = false
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        result = standard_get
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
@@ -199,27 +232,17 @@ describe Bulk::Resource do
       end
 
       it "should run before create request" do
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.create(controller)
+        standard_create
         @klass.actions.should   == [:create] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not create records that were not authenticated" do
         @klass.result = false
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
         result = nil
         lambda {
           lambda {
-            result = Bulk::Resource.create(controller)
+            result = standard_create
           }.should_not change(Task, :count)
         }.should_not change(Project, :count)
         json = {:json =>
@@ -233,72 +256,44 @@ describe Bulk::Resource do
       end
 
       it "should run before update request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        standard_update
         @klass.actions.should   == [:update] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not update records that were not authenticated" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        result = standard_update
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
         result.should include_json(json)
-        task.reload.title.should == 'task'
-        project.reload.name.should == 'project'
+        @task.reload.title.should == 'task'
+        @project.reload.name.should == 'project'
       end
 
       it "should run before delete request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.delete(controller)
+        result = standard_delete
         @klass.actions.sort.should == [:delete] * 2
         @klass.args.sort.should    == ["Project", "Task"]
       end
 
       it "should not delete records that were not authenticated" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
         result = nil
-        controller = mock("controller", :params => params)
         lambda {
           lambda {
-            result = Bulk::Resource.delete(controller)
-          }.should_not change(Task, :count)
-        }.should_not change(Project, :count)
+            result = standard_delete
+          }.should change(Task, :count)
+        }.should change(Project, :count)
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
@@ -324,25 +319,18 @@ describe Bulk::Resource do
       end
 
       it "should run during get request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        result = standard_get
         @klass.actions.should      == [:get] * 2
-        @klass.args.map(&:id).sort == [task.id, project.id].sort
+        @klass.args.map(&:id).sort == [@task.id, @project.id].sort
       end
 
       it "should not fetch records that were not authenticated" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-
         @klass.result = false
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        result = standard_get
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
@@ -350,27 +338,17 @@ describe Bulk::Resource do
       end
 
       it "should run during create request" do
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.create(controller)
+        standard_create
         @klass.actions.sort.should == [:create, :create]
         @klass.args.map {|r| r.class.name}.sort.should == ["Project", "Task"]
       end
 
       it "should not create records that were not authenticated" do
         @klass.result = false
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
         result = nil
         lambda {
           lambda {
-            result = Bulk::Resource.create(controller)
+            result = standard_create
           }.should_not change(Task, :count)
         }.should_not change(Project, :count)
         json = {:json =>
@@ -383,91 +361,45 @@ describe Bulk::Resource do
         result.should include_json(json)
       end
 
-      it "should not create records that were not authenticated" do
-        @klass.result = false
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
-        result = nil
-        lambda {
-          lambda {
-            result = Bulk::Resource.create(controller)
-          }.should_not change(Task, :count)
-        }.should_not change(Project, :count)
-        result.should include_json({:json => { :errors => {
-                                         "tasks"    => { '5'  => { "type" => "not_authenticated" } },
-                                         "projects" => { '10' => { "type" => "not_authenticated" } } } } })
-      end
-
       it "should run during update request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        standard_update
         @klass.actions.should   == [:update] * 2
         @klass.args.map { |r| r.class.name }.sort.should == ["Project", "Task"]
       end
 
       it "should not update records that were not authenticated" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        result = standard_update
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
         result.should include_json(json)
-        task.reload.title.should == 'task'
-        project.reload.name.should == 'project'
+        @task.reload.title.should == 'task'
+        @project.reload.name.should == 'project'
       end
 
       it "should run during delete request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.delete(controller)
+        standard_delete
         @klass.actions.should   == [:delete] * 2
         @klass.args.map { |r| r.class.name }.sort.should == ["Project", "Task"]
       end
 
       it "should not delete records that were not authenticated" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
         result = nil
-        controller = mock("controller", :params => params)
         lambda {
           lambda {
-            result = Bulk::Resource.delete(controller)
-          }.should_not change(Task, :count)
-        }.should_not change(Project, :count)
+            result = standard_delete
+          }.should change(Task, :count).by(1)
+        }.should change(Project, :count).by(1)
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "not_authenticated" } },
-              "projects" => { project.id.to_s => { "type" => "not_authenticated" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "not_authenticated" } },
+              "projects" => { @project.id.to_s => { "type" => "not_authenticated" } }
             }
           }
         }
@@ -526,23 +458,18 @@ describe Bulk::Resource do
       end
 
       it "should run before get request" do
-        controller = mock("controller", :params => {:tasks => [1], :projects => [2]})
-        result = Bulk::Resource.get(controller)
+        standard_get
         @klass.actions.should   == [:get] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not fetch records that were not authorized" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-
         @klass.result = false
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        result = standard_get
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
@@ -550,27 +477,17 @@ describe Bulk::Resource do
       end
 
       it "should run before create request" do
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.create(controller)
+        standard_create
         @klass.actions.should   == [:create] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not create records that were not authorized" do
         @klass.result = false
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
         result = nil
         lambda {
           lambda {
-            result = Bulk::Resource.create(controller)
+            result = standard_create
           }.should_not change(Task, :count)
         }.should_not change(Project, :count)
         json = {:json =>
@@ -584,72 +501,44 @@ describe Bulk::Resource do
       end
 
       it "should run before update request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        standard_update
         @klass.actions.should   == [:update] * 2
         @klass.args.sort.should == ["Project", "Task"]
       end
 
       it "should not update records that were not authorized" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        result = standard_update
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
         result.should include_json(json)
-        task.reload.title.should == 'task'
-        project.reload.name.should == 'project'
+        @task.reload.title.should == 'task'
+        @project.reload.name.should == 'project'
       end
 
       it "should run before delete request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.delete(controller)
+        standard_delete
         @klass.actions.sort.should == [:delete] * 2
         @klass.args.sort.should    == ["Project", "Task"]
       end
 
       it "should not delete records that were not authorized" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
         result = nil
-        controller = mock("controller", :params => params)
         lambda {
           lambda {
-            result = Bulk::Resource.delete(controller)
-          }.should_not change(Task, :count)
-        }.should_not change(Project, :count)
+            result = standard_delete
+          }.should change(Task, :count).by(1)
+        }.should change(Project, :count).by(1)
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
@@ -675,25 +564,18 @@ describe Bulk::Resource do
       end
 
       it "should run during get request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        standard_get
         @klass.actions.should      == [:get] * 2
-        @klass.args.map(&:id).sort == [task.id, project.id].sort
+        @klass.args.map(&:id).sort == [@task.id, @project.id].sort
       end
 
       it "should not fetch records that were not authorized" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-
         @klass.result = false
-        controller = mock("controller", :params => {:tasks => [task.id], :projects => [project.id]})
-        result = Bulk::Resource.get(controller)
+        result = standard_get
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
@@ -701,27 +583,17 @@ describe Bulk::Resource do
       end
 
       it "should run during create request" do
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.create(controller)
+        standard_create
         @klass.actions.sort.should == [:create, :create]
         @klass.args.map {|r| r.class.name}.sort.should == ["Project", "Task"]
       end
 
       it "should not create records that were not authorized" do
         @klass.result = false
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-          :tasks => [{:_local_id => '5', :title => 'My task'}]
-        }
-        controller = mock("controller", :params => params)
         result = nil
         lambda {
           lambda {
-            result = Bulk::Resource.create(controller)
+            result = standard_create
           }.should_not change(Task, :count)
         }.should_not change(Project, :count)
         json = {:json =>
@@ -735,72 +607,44 @@ describe Bulk::Resource do
       end
 
       it "should run during update request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        standard_update
         @klass.actions.should   == [:update] * 2
         @klass.args.map { |r| r.class.name }.sort.should == ["Project", "Task"]
       end
 
       it "should not update records that were not authorized" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [{:_local_id => '10', :name => 'SproutCore', :id => project.id}],
-          :tasks => [{:_local_id => '5', :title => 'My task', :id => task.id}]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.update(controller)
+        result = standard_update
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
         result.should include_json(json)
-        task.reload.title.should == 'task'
-        project.reload.name.should == 'project'
+        @task.reload.title.should == 'task'
+        @project.reload.name.should == 'project'
       end
 
       it "should run during delete request" do
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
-        controller = mock("controller", :params => params)
-        result = Bulk::Resource.delete(controller)
+        standard_delete
         @klass.actions.should   == [:delete] * 2
         @klass.args.map { |r| r.class.name }.sort.should == ["Project", "Task"]
       end
 
       it "should not delete records that were not authorized" do
         @klass.result = false
-        task    = Task.create(:title => 'task')
-        project = Project.create(:name => 'project')
-        params = {
-          :projects => [project.id],
-          :tasks => [task.id]
-        }
         result = nil
-        controller = mock("controller", :params => params)
         lambda {
           lambda {
-            result = Bulk::Resource.delete(controller)
-          }.should_not change(Task, :count)
-        }.should_not change(Project, :count)
+            result = standard_delete
+          }.should change(Task, :count).by(1)
+        }.should change(Project, :count).by(1)
         json = {:json =>
           { :errors => {
-              "tasks"    => { task.id.to_s    => { "type" => "forbidden" } },
-              "projects" => { project.id.to_s => { "type" => "forbidden" } }
+              "tasks"    => { @task.id.to_s    => { "type" => "forbidden" } },
+              "projects" => { @project.id.to_s => { "type" => "forbidden" } }
             }
           }
         }
