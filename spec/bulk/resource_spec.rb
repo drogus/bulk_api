@@ -194,6 +194,126 @@ describe Bulk::Resource do
     end
   end
 
+  context "params_accessible" do
+    before do
+      @klass = create_abstract_resource_class do
+        def params_accessible(klass)
+          { :projects => [:name], :tasks => [:title] }
+        end
+      end
+    end
+
+    it "should pass only params that are returned by params_accessible" do
+      params = {
+        :projects => [{:_local_id => '10', :name => 'SproutCore', :description => 'Great project'}],
+        :tasks => [{:_local_id => '5', :title => 'My task', :done => true }]
+      }
+      controller = mock("controller", :params => params)
+      Bulk::Resource.create(controller)
+      p = Project.first
+      p.name.should == "SproutCore"
+      p.description.should be_nil
+
+      t = Task.first
+      t.title.should == "My task"
+      t.done.should be_nil
+    end
+
+    context "with custom resource class" do
+      before do
+        tasks_class = Class.new(@klass) do
+          resource_class Task
+          resource_name :tasks
+
+          def params_accessible(klass)
+            { :tasks => [:done], :projects => [:description] }
+          end
+        end
+
+        Object.const_set(:TaskResource, tasks_class)
+      end
+
+      after do
+        Object.send(:remove_const, :TaskResource)
+      end
+
+      it "should run overriden params_accessible, only for current resource" do
+        params = {
+          :projects => [{:_local_id => '10', :name => 'SproutCore', :description => 'Great project'}],
+          :tasks => [{:_local_id => '5', :title => 'My task', :done => true }]
+        }
+        controller = mock("controller", :params => params)
+        result = Bulk::Resource.create(controller)
+        p = Project.first
+        p.name.should == "SproutCore"
+        p.description.should be_nil
+
+        # could not be saved, cause title is not in accessible
+        Task.count.should == 0
+      end
+    end
+  end
+
+  context "params_protected" do
+    before do
+      @klass = create_abstract_resource_class do
+        def params_protected(klass)
+          { :projects => [:description], :tasks => [:done] }
+        end
+      end
+    end
+
+    it "should not pass any params returned by params_protected" do
+      params = {
+        :projects => [{:_local_id => '10', :name => 'SproutCore', :description => 'Great project'}],
+        :tasks => [{:_local_id => '5', :title => 'My task', :done => true }]
+      }
+      controller = mock("controller", :params => params)
+      Bulk::Resource.create(controller)
+      p = Project.first
+      p.name.should == "SproutCore"
+      p.description.should be_nil
+
+      t = Task.first
+      t.title.should == "My task"
+      t.done.should be_nil
+    end
+
+    context "with custom resource class" do
+      before do
+        tasks_class = Class.new(@klass) do
+          resource_class Task
+          resource_name :tasks
+
+          def params_protected(klass)
+            { :tasks => [:title], :projects => [:name] }
+          end
+        end
+
+        Object.const_set(:TaskResource, tasks_class)
+      end
+
+      after do
+        Object.send(:remove_const, :TaskResource)
+      end
+
+      it "should run overriden params_accessible, only for current resource" do
+        params = {
+          :projects => [{:_local_id => '10', :name => 'SproutCore', :description => 'Great project'}],
+          :tasks => [{:_local_id => '5', :title => 'My task', :done => true }]
+        }
+        controller = mock("controller", :params => params)
+        Bulk::Resource.create(controller)
+        p = Project.first
+        p.name.should == "SproutCore"
+        p.description.should be_nil
+
+        # could not be saved, cause title is protected
+        Task.count.should == 0
+      end
+    end
+  end
+
   context "authentication" do
     context "#authenticate_records" do
       before do

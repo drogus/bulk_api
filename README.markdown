@@ -132,9 +132,33 @@ class AbstractResource < Bulk::Resource
 end
 ```
 
+### Params filtering
+
+While preparing your API, you will probably need to filter parameters
+that user can set on your models. The easiest way to do it is to set
+params_accessible or params_protected callbacks:
+
+```ruby
+class AbstractResource < Bulk::Resource
+  def params_accessible(klass)
+    { :tasks    => [:title, :done],
+                    :projects => [:name] }
+  end
+
+  # or:
+
+  def params_protected(klass)
+    { :tasks => [:created_at, :updated_at] }
+  end
+end
+```
+
+You can also set it for individual resource classes. In such case this
+will overwrite the one that's set in AbstractResource.
+
 ### Specific resource classes
 
-Sometimes you may want to implement specific application logic to one of the resources. In that case, the easiest way to do it is to create an AbstractResouce subclass that you can use to override standard behavior. There is a generator to make things easy for you:
+Sometimes you may want to implement specific application logic to one of the resources. Or you don't want to end up with Switch Driven Development in one of you authenticate callbacs. In such cases, the easiest way to handle resource specific code is to create an AbstractResouce subclass that you can use to override standard behavior. There is a generator to make things easy for you:
 
 ```
 rails g bulk:resource task

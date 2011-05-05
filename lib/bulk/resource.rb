@@ -137,7 +137,7 @@ module Bulk
       with_records_auth :create, collection, ids do
         hashes.each do |attrs|
           local_id = attrs.delete(:_local_id)
-          record = klass.new(attrs)
+          record = klass.new(filter_params(attrs))
           record[:_local_id] = local_id
           with_record_auth :create, collection, local_id, record do
             record.save
@@ -156,7 +156,7 @@ module Bulk
           attrs.delete(:_local_id)
           record = klass.where(:id => attrs[:id]).first
           with_record_auth :update, collection, record.id, record do
-            record.update_attributes(attrs)
+            record.update_attributes(filter_params(attrs))
             set_with_validity_check(collection, record.id, record)
           end
         end
@@ -246,6 +246,30 @@ module Bulk
       unless record.errors.empty?
         collection.errors.set(id, :invalid, record.errors.to_hash)
       end
+    end
+
+    def filter_params(attributes)
+      if self.respond_to?(:params_accessible)
+        filter_params_for(:accessible, attributes)
+      elsif self.respond_to?(:params_protected)
+        filter_params_for(:protected, attributes)
+      else
+        attributes
+      end
+    end
+
+    def filter_params_for(type, attributes)
+      filter = send("params_#{type}", klass)
+      filter = filter ? filter[resource_name.to_sym] : nil
+
+      if filter
+        attributes.delete_if do |k, v|
+          delete_if = filter.include?(k)
+          type == :accessible ? !delete_if : delete_if
+        end
+      end
+
+      attributes
     end
 
     def klass
