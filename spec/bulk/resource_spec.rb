@@ -76,6 +76,86 @@ describe Bulk::Resource do
     klass.callbacks.should == [:authenticate, :authorize, :authenticate_records, :authorize_records, :authenticate_record, :authorize_record]
   end
 
+  context "callbacks priority" do
+    before do
+      @klass = create_abstract_resource_class do
+        def self.callbacks
+          @@callbacks ||= []
+        end
+
+        def self.clear_callbacks
+          @@callbacks = nil
+        end
+
+        def authenticate_record(action, record)
+          self.class.callbacks << :abstract_authenticate_record
+        end
+
+        def authenticate_records(action, klass)
+          self.class.callbacks << :abstract_authenticate_records
+        end
+
+        def authenticate(action)
+          self.class.callbacks << :abstract_authenticate
+        end
+
+        def authorize_record(action, record)
+          self.class.callbacks << :abstract_authorize_record
+        end
+
+        def authorize_records(action, klass)
+          self.class.callbacks << :abstract_authorize_records
+        end
+
+        def authorize(action)
+          self.class.callbacks << :abstract_authorize
+        end
+      end
+
+      tasks_class = Class.new(@klass) do
+        resource_class Task
+        resource_name :tasks
+
+        def authenticate_record(action, record)
+          self.class.callbacks << :tasks_authenticate_record
+        end
+
+        def authenticate_records(action, klass)
+          self.class.callbacks << :tasks_authenticate_records
+        end
+
+        def authenticate(action)
+          self.class.callbacks << :tasks_authenticate
+        end
+
+        def authorize_record(action, record)
+          self.class.callbacks << :tasks_authorize_record
+        end
+
+        def authorize_records(action, klass)
+          self.class.callbacks << :tasks_authorize_records
+        end
+
+        def authorize(action)
+          self.class.callbacks << :tasks_authorize
+        end
+      end
+
+      Object.const_set(:TaskResource, tasks_class)
+    end
+
+    after do
+      Object.send(:remove_const, :TaskResource)
+    end
+
+    it "should run resource specific callbacks if they exist" do
+      task = Task.create(:title => 'task')
+      controller = mock("controller", :params => {:tasks => [task.id]})
+      result = Bulk::Resource.get(controller)
+      @klass.callbacks.should == [:abstract_authenticate, :abstract_authorize, :tasks_authenticate_records, :tasks_authorize_records, :tasks_authenticate_record, :tasks_authorize_record]
+    end
+  end
+
   context "authentication" do
     context "#authenticate_records" do
       before do
