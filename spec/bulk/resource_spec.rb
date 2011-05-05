@@ -902,14 +902,14 @@ describe Bulk::Resource do
 
   describe "subclassed resource" do
     before do
-      TasksResource = Class.new(AbstractResource)
-      TasksResource.resource_class Task
+      TaskResource = Class.new(AbstractResource)
+      TaskResource.resource_class Task
       controller = mock("controller", :params => {})
-      @resource = TasksResource.new(controller)
+      @resource = TaskResource.new(controller)
     end
 
     after do
-      Object.send(:remove_const, :TasksResource)
+      Object.send(:remove_const, :TaskResource)
     end
 
     it_behaves_like "Bulk::Resource subclass"

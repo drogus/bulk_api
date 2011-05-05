@@ -99,7 +99,7 @@ module Bulk
 
       def instantiate_resource_class(controller, resource)
         begin
-          "#{resource.to_s.pluralize}_resource".classify.constantize.new(controller)
+          "#{resource.to_s.singularize}_resource".classify.constantize.new(controller)
         rescue NameError
           begin
             abstract_resource_class.new(controller, :resource_name => resource)
@@ -179,7 +179,7 @@ module Bulk
     end
 
     def plural_resource_name
-      resource_name.pluralize
+      resource_name.to_s.pluralize
     end
 
     def resource_name
@@ -250,7 +250,7 @@ module Bulk
 
     def klass
       @_klass ||= begin
-        resource_class || (resource_name ? resource_name.classify.constantize : nil) ||
+        resource_class || (resource_name ? resource_name.to_s.singularize.classify.constantize : nil) ||
           raise("Could not get resource class, please either set resource_class or resource_name that matches model that you want to use")
       rescue NameError
         raise NameError.new("Could not find class matching your resource_name (#{resource_name} - we were looking for #{resource_name.classify})")
