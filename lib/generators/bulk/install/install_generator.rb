@@ -15,8 +15,8 @@ DESC
         route 'bulk_routes "/api/bulk"'
       end
 
-      def copy_app_bulk_abstract_resource
-        template 'app/bulk/abstract_resource.rb'
+      def copy_app_bulk_application_resource
+        template 'app/bulk/application_resource.rb'
       end
     end
   end

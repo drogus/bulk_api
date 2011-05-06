@@ -40,7 +40,7 @@ By default Bulk Api plugin handles all of the models, in production you will pro
 
 ```ruby
 # app/bulk/abstract_resource.rb
-class AbstractResource < Bulk::Resource
+class ApplicationResource < Bulk::Resource
   resources :tasks, :projects
 end
 ```
@@ -56,7 +56,7 @@ When using bulk api you can handle things on 3 levels:
 
 Let's see how to handle things on all of the 3 levels to add your own logic (like authentication or authorization).
 
-If some of your logic is common for all the record types, you can use AbstractResource that lives in app/bulk/abstract_resource.rb. This is base class for all of the resources, just like ApplicationController is a base class for all of your controllers (this may not be true for some applications, but let's agree that's the most common scenario). To allow easy integration with application, you have access to several application objects in AbstractResource and its subclasses:
+If some of your logic is common for all the record types, you can use ApplicationResource that lives in app/bulk/abstract_resource.rb. This is base class for all of the resources, just like ApplicationController is a base class for all of your controllers (this may not be true for some applications, but let's agree that's the most common scenario). To allow easy integration with application, you have access to several application objects in ApplicationResource and its subclasses:
 
 * session
 * controller
@@ -80,7 +80,7 @@ There are 3 kind of authorization callbacks that you can use. Each of them repre
 Let's see example usage of each of this callbacks types:
 
 ```ruby
-class AbstractResource < Bulk::Resource
+class ApplicationResource < Bulk::Resource
   # delegate all the things that we need from controller
   delegate current_user, :can?, :to => :controller
 
@@ -109,7 +109,7 @@ authentication callback succeeds.
 Let's see example usage of each of this callbacks types.
 
 ```ruby
-class AbstractResource < Bulk::Resource
+class ApplicationResource < Bulk::Resource
   # delegate all the things that we need from controller
   delegate current_user, :can?, :to => :controller
 
@@ -139,7 +139,7 @@ that user can set on your models. The easiest way to do it is to set
 params_accessible or params_protected callbacks:
 
 ```ruby
-class AbstractResource < Bulk::Resource
+class ApplicationResource < Bulk::Resource
   def params_accessible(klass)
     { :tasks    => [:title, :done],
                     :projects => [:name] }
@@ -154,7 +154,7 @@ end
 ```
 
 You can also set it for individual resource classes. In such case this
-will overwrite the one that's set in AbstractResource.
+will overwrite the one that's set in ApplicationResource.
 
 ### Attributes filtering
 
@@ -177,7 +177,7 @@ callback. Value returned from that callback will be passed to the
 record's as_json method:
 
 ```ruby
-class AbstractResource < Bulk::Resource
+class ApplicationResource < Bulk::Resource
   def as_json(record)
     # return hash that will be passed to record's as_json
     { :only => [:email] }
@@ -189,7 +189,7 @@ You can also override that method in individual resource classes.
 
 ### Specific resource classes
 
-Sometimes you may want to implement specific application logic to one of the resources. Or you don't want to end up with Switch Driven Development in one of you authenticate callbacs. In such cases, the easiest way to handle resource specific code is to create an AbstractResouce subclass that you can use to override standard behavior. There is a generator to make things easy for you:
+Sometimes you may want to implement specific application logic to one of the resources. Or you don't want to end up with Switch Driven Development in one of you authenticate callbacs. In such cases, the easiest way to handle resource specific code is to create an ApplicationResouce subclass that you can use to override standard behavior. There is a generator to make things easy for you:
 
 ```
 rails g bulk:resource task
@@ -199,7 +199,7 @@ This will create the following file:
 
 ```ruby
 # app/bulk/task_resource.rb
-class TaskResource < AbstractResource
+class TaskResource < ApplicationResource
 end
 ```
 

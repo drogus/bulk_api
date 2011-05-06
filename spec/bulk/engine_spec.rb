@@ -8,12 +8,12 @@ describe Bulk::Engine do
   end
 
   after do
-    clean_abstract_resource_class
+    clean_application_resource_class
   end
 
   describe "bulk API" do
     before do
-      create_abstract_resource_class do
+      create_application_resource_class do
         resources :tasks, :projects
       end
 
@@ -102,7 +102,7 @@ describe Bulk::Engine do
 
   describe "bulk API with only :tasks enabled" do
     before do
-      create_abstract_resource_class do
+      create_application_resource_class do
         resources :tasks
       end
 

@@ -3,7 +3,7 @@ module Bulk
   class AuthorizationError < StandardError; end
 
   class Resource
-    module AbstractResourceMixin
+    module ApplicationResourceMixin
       def inherited(base)
         if base.name =~ /(.*)Resource$/
           base.resource_name($1.underscore.singularize)
@@ -17,7 +17,7 @@ module Bulk
     @@resources = []
 
     class << self
-      attr_writer :abstract_resource_class
+      attr_writer :application_resource_class
       attr_reader :abstract
       alias_method :abstract?, :abstract
 
@@ -36,23 +36,23 @@ module Bulk
         @@resources
       end
 
-      def abstract_resource_class
-        @abstract_resource_class ||= AbstractResource
+      def application_resource_class
+        @application_resource_class ||= ApplicationResource
       end
 
       def inherited(base)
-        if @abstract_resource_class
+        if @application_resource_class
           if self.name == "Bulk::Resource"
-            raise "Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: #{abstract_resource_class.inspect})"
+            raise "Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: #{application_resource_class.inspect})"
           else
             super
             return
           end
         end
 
-        self.abstract_resource_class = base
+        self.application_resource_class = base
         base.abstract!
-        base.extend AbstractResourceMixin
+        base.extend ApplicationResourceMixin
       end
 
       %w/get create update delete/.each do |method|
@@ -72,14 +72,14 @@ module Bulk
       # TODO: refactor this to some kind of Response class
       def handle_response(method, controller)
         response = {}
-        abstract_resource = abstract_resource_class.new(controller, :abstract => true)
+        application_resource = application_resource_class.new(controller, :abstract => true)
 
-        if abstract_resource.respond_to?(:authenticate)
-          raise AuthenticationError unless abstract_resource.authenticate(method)
+        if application_resource.respond_to?(:authenticate)
+          raise AuthenticationError unless application_resource.authenticate(method)
         end
 
-        if abstract_resource.respond_to?(:authorize)
-          raise AuthorizationError unless abstract_resource.authorize(method)
+        if application_resource.respond_to?(:authorize)
+          raise AuthorizationError unless application_resource.authorize(method)
         end
 
         controller.params.each do |resource, hash|
@@ -104,7 +104,7 @@ module Bulk
           "#{resource.to_s.singularize}_resource".classify.constantize.new(controller)
         rescue NameError
           begin
-            abstract_resource_class.new(controller, :resource_name => resource)
+            application_resource_class.new(controller, :resource_name => resource)
           rescue NameError
           end
         end

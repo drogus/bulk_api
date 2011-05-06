@@ -41,18 +41,18 @@ describe Bulk::Resource do
   end
 
   after do
-    clean_abstract_resource_class
+    clean_application_resource_class
   end
 
   it "should raise error when trying to inherit from it while some other class already inherits from it" do
-    clean_abstract_resource_class
+    clean_application_resource_class
     lambda do
       Class.new(Bulk::Resource)
-    end.should raise_error("Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: AbstractResource)")
+    end.should raise_error("Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: ApplicationResource)")
   end
 
   it "should allow to set resource class" do
-    klass = Class.new(AbstractResource) do
+    klass = Class.new(ApplicationResource) do
       resource_class Task
     end
 
@@ -63,14 +63,14 @@ describe Bulk::Resource do
   end
 
   it "should raise custom error if resource_name is not set properly" do
-    klass = Class.new(AbstractResource) do
+    klass = Class.new(ApplicationResource) do
     end
 
     lambda { klass.new(nil) }.should raise_error("Could not get resource class, please either set resource_class or resource_name that matches model that you want to use")
   end
 
   it "should raise custom error if class cannot be found using resource_name" do
-    klass = Class.new(AbstractResource) do
+    klass = Class.new(ApplicationResource) do
       resource_name "something"
     end
 
@@ -78,7 +78,7 @@ describe Bulk::Resource do
   end
 
   it "should run authentication callbacks before authorization callbacks" do
-    klass = create_abstract_resource_class do
+    klass = create_application_resource_class do
       cattr_accessor :callbacks
       self.callbacks = []
 
@@ -116,7 +116,7 @@ describe Bulk::Resource do
 
   context "callbacks priority" do
     before do
-      @klass = create_abstract_resource_class do
+      @klass = create_application_resource_class do
         def self.callbacks
           @@callbacks ||= []
         end
@@ -126,27 +126,27 @@ describe Bulk::Resource do
         end
 
         def authenticate_record(action, record)
-          self.class.callbacks << :abstract_authenticate_record
+          self.class.callbacks << :application_authenticate_record
         end
 
         def authenticate_records(action, klass)
-          self.class.callbacks << :abstract_authenticate_records
+          self.class.callbacks << :application_authenticate_records
         end
 
         def authenticate(action)
-          self.class.callbacks << :abstract_authenticate
+          self.class.callbacks << :application_authenticate
         end
 
         def authorize_record(action, record)
-          self.class.callbacks << :abstract_authorize_record
+          self.class.callbacks << :application_authorize_record
         end
 
         def authorize_records(action, klass)
-          self.class.callbacks << :abstract_authorize_records
+          self.class.callbacks << :application_authorize_records
         end
 
         def authorize(action)
-          self.class.callbacks << :abstract_authorize
+          self.class.callbacks << :application_authorize
         end
       end
 
@@ -190,13 +190,13 @@ describe Bulk::Resource do
       task = Task.create(:title => 'task')
       controller = mock("controller", :params => {:tasks => [task.id]})
       result = Bulk::Resource.get(controller)
-      @klass.callbacks.should == [:abstract_authenticate, :abstract_authorize, :tasks_authenticate_records, :tasks_authorize_records, :tasks_authenticate_record, :tasks_authorize_record]
+      @klass.callbacks.should == [:application_authenticate, :application_authorize, :tasks_authenticate_records, :tasks_authorize_records, :tasks_authenticate_record, :tasks_authorize_record]
     end
   end
 
   context "as_json" do
     before do
-      @klass = create_abstract_resource_class do
+      @klass = create_application_resource_class do
         def as_json(klass)
           case klass.name
           when "Project"
@@ -278,7 +278,7 @@ describe Bulk::Resource do
 
   context "params_accessible" do
     before do
-      @klass = create_abstract_resource_class do
+      @klass = create_application_resource_class do
         def params_accessible(klass)
           { :projects => [:name], :tasks => [:title] }
         end
@@ -338,7 +338,7 @@ describe Bulk::Resource do
 
   context "params_protected" do
     before do
-      @klass = create_abstract_resource_class do
+      @klass = create_application_resource_class do
         def params_protected(klass)
           { :projects => [:description], :tasks => [:done] }
         end
@@ -399,7 +399,7 @@ describe Bulk::Resource do
   context "authentication" do
     context "#authenticate_records" do
       before do
-        @klass = create_abstract_resource_class do
+        @klass = create_application_resource_class do
           resources :tasks, :projects
           cattr_accessor :args, :actions, :result
           self.args = []
@@ -505,7 +505,7 @@ describe Bulk::Resource do
 
     context "#authenticate_record" do
       before do
-        @klass = create_abstract_resource_class do
+        @klass = create_application_resource_class do
           resources :tasks, :projects
           cattr_accessor :args, :actions, :result
           self.args = []
@@ -611,7 +611,7 @@ describe Bulk::Resource do
 
     context "global authentication" do
       it "should run authentication callback before handling request" do
-        abstract_resource = create_abstract_resource_class do
+        application_resource = create_application_resource_class do
           cattr_accessor :authenticated
           self.authenticated = false
 
@@ -622,12 +622,12 @@ describe Bulk::Resource do
 
         controller = mock("controlelr", :params => {})
         result = Bulk::Resource.get(controller)
-        abstract_resource.authenticated.should == true
+        application_resource.authenticated.should == true
         result[:status].should be_nil
       end
 
       it "should set 401 status if authentication fails" do
-        abstract_resource = create_abstract_resource_class do
+        application_resource = create_application_resource_class do
           def authenticate(action)
             false
           end
@@ -643,7 +643,7 @@ describe Bulk::Resource do
   context "authorization" do
     context "#authorize_records" do
       before do
-        @klass = create_abstract_resource_class do
+        @klass = create_application_resource_class do
           resources :tasks, :projects
           cattr_accessor :args, :actions, :result
           self.args = []
@@ -750,7 +750,7 @@ describe Bulk::Resource do
 
     context "#authorize_record" do
       before do
-        @klass = create_abstract_resource_class do
+        @klass = create_application_resource_class do
           resources :tasks, :projects
           cattr_accessor :args, :actions, :result
           self.args = []
@@ -856,7 +856,7 @@ describe Bulk::Resource do
 
     context "global authorization" do
       it "should run authorization callback before handling request" do
-        abstract_resource = create_abstract_resource_class do
+        application_resource = create_application_resource_class do
           cattr_accessor :authorized
           self.authorized = false
 
@@ -867,17 +867,17 @@ describe Bulk::Resource do
 
         controller = mock("controlelr", :params => {})
         result = Bulk::Resource.get(controller)
-        abstract_resource.authorized.should == true
+        application_resource.authorized.should == true
         result[:status].should be_nil
       end
 
       it "should set 403 status if authentication fails" do
-        abstract_resource = create_abstract_resource_class do
+        application_resource = create_application_resource_class do
           def authorize(action)
             false
           end
         end
-        Bulk::Resource.abstract_resource_class = abstract_resource
+        Bulk::Resource.application_resource_class = application_resource
 
         controller = mock("controlelr", :params => {})
         result = Bulk::Resource.get(controller)
@@ -1015,7 +1015,7 @@ describe Bulk::Resource do
 
   describe "without specifing available resources" do
     before do
-      create_abstract_resource_class
+      create_application_resource_class
     end
 
     it "should skip resources that can't be resolved into classes" do
@@ -1028,7 +1028,7 @@ describe Bulk::Resource do
 
   describe "subclassed resource" do
     before do
-      TaskResource = Class.new(AbstractResource)
+      TaskResource = Class.new(ApplicationResource)
       TaskResource.resource_class Task
       controller = mock("controller", :params => {})
       @resource = TaskResource.new(controller)
