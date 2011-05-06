@@ -2,17 +2,23 @@ require 'spec_helper'
 
 describe Bulk::Collection do
   let(:collection) { Bulk::Collection.new }
-  let(:item) { mock("item", :id => 3) }
+  let(:item) { mock("item", :id => 3, :as_json => "item_3_as_json") }
+
+  it "applies as_json options to the records" do
+    item.should_receive(:as_json).with({ :only => [:something] }).and_return({:something => "something"})
+    collection.set(1, item)
+    hash = collection.to_hash(:items, :as_json => {:only => [:something]})
+  end
 
   it "can be converted to hash" do
     collection.set(1, item)
     collection.errors.set(1, :invalid, :y => {:so => :serious})
 
-    second_item = mock("second item")
+    second_item = mock("second item", :as_json => "item_4_as_json", :id => 4)
     collection.set(2, second_item)
 
     expected = {
-      :items => [second_item],
+      :items => ["item_4_as_json"],
       :errors => {:items => { '1' => { :type => :invalid, :data => { :y => { :so => :serious } } } } }
     }
     hash = collection.to_hash(:items)
@@ -24,7 +30,7 @@ describe Bulk::Collection do
     collection.set(1, item)
     collection.errors.set(1, :invalid, :y => {:so => :serious})
 
-    second_item = mock("second item", :id => 4)
+    second_item = mock("second item", :as_json => "item_4_as_json", :id => 4)
     collection.set(2, second_item)
 
     expected = {

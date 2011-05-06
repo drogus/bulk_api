@@ -3,18 +3,18 @@ require 'action_dispatch/testing/integration'
 
 describe Bulk::Resource do
   def standard_get
-    @task    = Task.create(:title => 'task')
-    @project = Project.create(:name => 'project')
+    @task    = Task.create(:title => 'task', :done => true)
+    @project = Project.create(:name => 'project', :description => 'desc')
     controller = mock("controller", :params => {:tasks => [@task.id], :projects => [@project.id]})
     Bulk::Resource.get(controller)
   end
 
   def standard_update
-    @task    = Task.create(:title => 'task')
-    @project = Project.create(:name => 'project')
+    @task    = Task.create(:title => 'My Task')
+    @project = Project.create(:name => 'SproutCore')
     params = {
-      :projects => [{:_local_id => '10', :name => 'SproutCore', :id => @project.id}],
-      :tasks => [{:_local_id => '5', :title => 'My task', :id => @task.id}]
+      :projects => [{:_local_id => '10', :name => 'project', :description => 'desc', :id => @project.id}],
+      :tasks => [{:_local_id => '5', :title => 'task', :done => true, :id => @task.id}]
     }
     controller = mock("controller", :params => params)
     Bulk::Resource.update(controller)
@@ -22,16 +22,16 @@ describe Bulk::Resource do
 
   def standard_create
     params = {
-      :projects => [{:_local_id => '10', :name => 'SproutCore'}],
-      :tasks => [{:_local_id => '5', :title => 'My task'}]
+      :projects => [{:_local_id => '10', :name => 'project', :description => 'desc'}],
+      :tasks => [{:_local_id => '5', :title => 'task', :done => true}]
     }
     controller = mock("controller", :params => params)
     Bulk::Resource.create(controller)
   end
 
   def standard_delete
-    @task    = Task.create(:title => 'task')
-    @project = Project.create(:name => 'project')
+    @task    = Task.create(:title => 'task', :done => true)
+    @project = Project.create(:name => 'project', :description => 'desc')
     params = {
       :projects => [@project.id],
       :tasks => [@task.id]
@@ -191,6 +191,88 @@ describe Bulk::Resource do
       controller = mock("controller", :params => {:tasks => [task.id]})
       result = Bulk::Resource.get(controller)
       @klass.callbacks.should == [:abstract_authenticate, :abstract_authorize, :tasks_authenticate_records, :tasks_authorize_records, :tasks_authenticate_record, :tasks_authorize_record]
+    end
+  end
+
+  context "as_json" do
+    before do
+      @klass = create_abstract_resource_class do
+        def as_json(klass)
+          case klass.name
+          when "Project"
+            { :only => [:name] }
+          when "Task"
+            { :only => [:title] }
+          end
+        end
+      end
+    end
+
+    it "should filter attributes on get" do
+      result = standard_get
+      expected = { :tasks => [{:title => "task"}], :projects => [{:name => "project"}] }
+      result.should include_json(:json => expected)
+      not_expected = { :tasks => [{:done => true}], :projects => [{:description => 'desc'}] }
+      result.should_not include_json(:json => not_expected)
+    end
+
+    it "should filter attributes on create" do
+      result = standard_create
+      expected = { :tasks => [{:title => "task"}], :projects => [{:name => "project"}] }
+      result.should include_json(:json => expected)
+      not_expected = { :tasks => [{:done => true}], :projects => [{:description => 'desc'}] }
+      result.should_not include_json(:json => not_expected)
+    end
+
+    it "should filter attributes on update" do
+      result = standard_update
+      expected = { :tasks => [{:title => "task"}], :projects => [{:name => "project"}] }
+      result.should include_json(:json => expected)
+      not_expected = { :tasks => [{:done => true}], :projects => [{:description => 'desc'}] }
+      result.should_not include_json(:json => not_expected)
+    end
+
+    context "with custom resource class" do
+      before do
+        tasks_class = Class.new(@klass) do
+          resource_class Task
+          resource_name :tasks
+
+          def as_json(klass)
+            { :only => [:done] }
+          end
+        end
+
+        Object.const_set(:TaskResource, tasks_class)
+      end
+
+      after do
+        Object.send(:remove_const, :TaskResource)
+      end
+
+      it "should override as_json attributes on get" do
+        result = standard_get
+        expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
+        result.should include_json(:json => expected)
+        not_expected = { :tasks => [{:title => "task"}], :projects => [{:description => "desc"}] }
+        result.should_not include_json(:json => not_expected)
+      end
+
+      it "should override as_json attributes on create" do
+        result = standard_create
+        expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
+        result.should include_json(:json => expected)
+        not_expected = { :tasks => [{:title => "task"}], :projects => [{:description => "desc"}] }
+        result.should_not include_json(:json => not_expected)
+      end
+
+      it "should override as_json attributes on update" do
+        result = standard_update
+        expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
+        result.should include_json(:json => expected)
+        not_expected = { :tasks => [{:title => "task"}], :projects => [{:description => "desc"}] }
+        result.should_not include_json(:json => not_expected)
+      end
     end
   end
 
@@ -392,8 +474,8 @@ describe Bulk::Resource do
           }
         }
         result.should include_json(json)
-        @task.reload.title.should == 'task'
-        @project.reload.name.should == 'project'
+        @task.reload.title.should == 'My Task'
+        @project.reload.name.should == 'SproutCore'
       end
 
       it "should run before delete request" do
@@ -498,8 +580,8 @@ describe Bulk::Resource do
           }
         }
         result.should include_json(json)
-        @task.reload.title.should == 'task'
-        @project.reload.name.should == 'project'
+        @task.reload.title.should == 'My Task'
+        @project.reload.name.should == 'SproutCore'
       end
 
       it "should run during delete request" do
@@ -637,8 +719,8 @@ describe Bulk::Resource do
           }
         }
         result.should include_json(json)
-        @task.reload.title.should == 'task'
-        @project.reload.name.should == 'project'
+        @task.reload.title.should == 'My Task'
+        @project.reload.name.should == 'SproutCore'
       end
 
       it "should run before delete request" do
@@ -743,8 +825,8 @@ describe Bulk::Resource do
           }
         }
         result.should include_json(json)
-        @task.reload.title.should == 'task'
-        @project.reload.name.should == 'project'
+        @task.reload.title.should == 'My Task'
+        @project.reload.name.should == 'SproutCore'
       end
 
       it "should run during delete request" do

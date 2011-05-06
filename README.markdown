@@ -156,6 +156,37 @@ end
 You can also set it for individual resource classes. In such case this
 will overwrite the one that's set in AbstractResource.
 
+### Attributes filtering
+
+If you want to filter the attributes that are sent in a response, the
+easiest way to do it is to use standard Rails mechanism for that -
+override as_json method in your model:
+
+```ruby
+class MyModel < ActiveRecord::Base
+  def as_json(options={})
+    super(:only => [:email, :avatar], :include =>[:addresses])
+  end
+end
+```
+
+With some applications that's not enough, though. If you have several
+user roles, the chances are that you will need to differentiate
+responses based on user rights. In that case you can use as_json
+callback. Value returned from that callback will be passed to the
+record's as_json method:
+
+```ruby
+class AbstractResource < Bulk::Resource
+  def as_json(record)
+    # return hash that will be passed to record's as_json
+    { :only => [:email] }
+  end
+end
+```
+
+You can also override that method in individual resource classes.
+
 ### Specific resource classes
 
 Sometimes you may want to implement specific application logic to one of the resources. Or you don't want to end up with Switch Driven Development in one of you authenticate callbacs. In such cases, the easiest way to handle resource specific code is to create an AbstractResouce subclass that you can use to override standard behavior. There is a generator to make things easy for you:
