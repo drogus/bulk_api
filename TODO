@@ -1,0 +1,9 @@
+* allow to inherit for Bulk::Resource directly
+* fix setting resource_name (it sets the name, but Bulk::Resource will look for a class based on a resource class name anyway)
+* refactor handling responses
+* do not always fetch all the records
+* * timestamps seems reasonable way to check for newest records
+* * should be configurable for individual classes
+* think about handling queries:
+* * how to handle simple queries
+* * how can developers extend it to use complex queries
