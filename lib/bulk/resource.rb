@@ -87,7 +87,8 @@ module Bulk
           resource_object = instantiate_resource_class(controller, resource)
           next unless resource_object
           collection = resource_object.send(method, hash)
-          response.deep_merge! collection.to_hash(resource_object.plural_resource_name)
+          options = {:only_ids => (method == 'delete')}
+          response.deep_merge! collection.to_hash(resource_object.plural_resource_name, options)
         end
 
         { :json => response }

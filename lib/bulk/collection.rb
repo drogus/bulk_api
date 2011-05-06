@@ -29,12 +29,14 @@ module Bulk
       @errors ||= Errors.new(self)
     end
 
-    def to_hash(name)
+    def to_hash(name, options = {})
+      only_ids = options[:only_ids]
       response = {}
 
       each do |id, record|
+        next if errors.get(id)
         response[name] ||= []
-        response[name] << record
+        response[name] << (only_ids ? record.id : record)
       end
 
       errors.each do |id, error|

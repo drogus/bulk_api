@@ -93,6 +93,10 @@ describe Bulk::Engine do
                                 :projects => [@project.id] }
         }.should change(Task, :count).by(-1)
       }.should change(Project, :count).by(-1)
+
+      body = JSON.parse(last_response.body)
+      body["tasks"].should == [@task.id]
+      body["projects"].should == [@project.id]
     end
   end
 

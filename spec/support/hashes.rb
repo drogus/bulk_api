@@ -15,7 +15,11 @@ RSpec::Matchers.define :include_json do |expected|
         # from expected array are included in one of the hashes from
         # original array
         value.all? { |v|
-          v.is_a?(Hash) && hash[key].any? { |h| included?(h, v) }
+          if v.is_a?(Hash)
+            hash[key].any? { |h| included?(h, v) }
+          else
+            hash[key].include?(v)
+          end
         }
       else
         hash[key] == value
