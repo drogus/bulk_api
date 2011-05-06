@@ -6,4 +6,7 @@ Gem::Specification.new do |s|
   s.description = "Easy integration of rails apps with sproutcore."
   s.files = Dir["{app,lib,config}/**/*"] + ["MIT-LICENSE", "Rakefile", "Gemfile", "README.rdoc"]
   s.version = "0.0.1"
+
+  s.add_dependency "rails",      "~> 3.0"
+  s.add_dependency "sproutcore", "~> 1.0"
 end
