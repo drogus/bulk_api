@@ -4,17 +4,9 @@ require 'sproutcore/models/project'
 
 module Bulk
   class Sproutcore
-    attr_reader :path
-
-    def initialize(options = {})
-      @path = options[:path]
-      @prefix = options[:prefix]
-      SC.prefix = @prefix
-    end
-
     def sproutcore
       @sproutcore ||= begin
-        project = SC::Project.load File.expand_path(path), :parent => SC.builtin_project
+        project = SC::Project.load Rails.application.paths["app/sproutcore"].first, :parent => SC.builtin_project
         SC::Rack::Service.new(project)
       end
     end
