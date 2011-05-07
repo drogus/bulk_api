@@ -8,5 +8,5 @@ Gem::Specification.new do |s|
   s.version = "0.0.1"
 
   s.add_dependency "rails",      "~> 3.0"
-  s.add_dependency "sproutcore", "~> 1.0"
+  s.add_dependency "sproutcore", "~> 1.5"
 end
