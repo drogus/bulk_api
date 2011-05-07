@@ -18,6 +18,10 @@ DESC
       def copy_app_bulk_application_resource
         template 'app/bulk/application_resource.rb'
       end
+
+      def copy_initializers_bulk_api
+        template "config/initializers/bulk_api.rb"
+      end
     end
   end
 end

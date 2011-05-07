@@ -1,4 +1,4 @@
-class ApplicationResource # < Bulk::Resource
+class ApplicationResource < Bulk::Resource
 
 end
 

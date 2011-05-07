@@ -3,13 +3,6 @@ module Bulk
   class AuthorizationError < StandardError; end
 
   class Resource
-    module ApplicationResourceMixin
-      def inherited(base)
-        if base.name =~ /(.*)Resource$/
-          base.resource_name($1.underscore.singularize)
-        end
-      end
-    end
 
     attr_reader :controller
     delegate :session, :params, :to => :controller
@@ -38,21 +31,15 @@ module Bulk
 
       def application_resource_class
         @application_resource_class ||= ApplicationResource
+        @application_resource_class.is_a?(Class) ? @application_resource_class : Object.const_get(@application_resource_class.to_sym)
       end
 
       def inherited(base)
-        if @application_resource_class
-          if self.name == "Bulk::Resource"
-            raise "Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: #{application_resource_class.inspect})"
-          else
-            super
-            return
-          end
+        if base.name == application_resource_class.to_s
+          base.abstract!
+        elsif base.name =~ /(.*)Resource$/
+          base.resource_name($1.underscore.singularize)
         end
-
-        self.application_resource_class = base
-        base.abstract!
-        base.extend ApplicationResourceMixin
       end
 
       %w/get create update delete/.each do |method|

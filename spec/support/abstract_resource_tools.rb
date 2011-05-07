@@ -1,15 +1,12 @@
 module ApplicationResourceTools
   def create_application_resource_class(&block)
-    Object.send(:remove_const, :ApplicationResource) if defined?(ApplicationResource)
-    Bulk::Resource.application_resource_class = nil
-
-    Class.new(Bulk::Resource, &block)
+    klass = Class.new(Bulk::Resource, &block)
+    Bulk::Resource.application_resource_class = klass
+    klass
   end
 
   def clean_application_resource_class
-    Object.send(:remove_const, :ApplicationResource) if defined?(ApplicationResource)
-    Bulk::Resource.application_resource_class = nil
-    Object.const_set(:ApplicationResource, Class.new(Bulk::Resource))
+    Bulk::Resource.application_resource_class = ApplicationResource
   end
 end
 

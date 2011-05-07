@@ -1,2 +1,2 @@
-class TaskResource < Bulk::Resource
+class TaskResource < ApplicationResource
 end

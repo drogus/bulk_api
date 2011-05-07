@@ -40,15 +40,35 @@ describe Bulk::Resource do
     Bulk::Resource.delete(controller)
   end
 
+  before do
+    Bulk::Resource.resources.clear if Bulk::Resource.resources
+  end
+
   after do
     clean_application_resource_class
   end
 
-  it "should raise error when trying to inherit from it while some other class already inherits from it" do
-    clean_application_resource_class
-    lambda do
-      Class.new(Bulk::Resource)
-    end.should raise_error("Only one class can inherit from Bulk::Resource, your other resources should inherit from that class (currently it's: ApplicationResource)")
+  it "allows to set application resource class" do
+    klass = Class.new(Bulk::Resource)
+
+    Bulk::Resource.application_resource_class = klass
+
+    resource_class = Bulk::Resource.send(:instantiate_resource_class, nil, :tasks)
+    resource_class.is_a?(klass).should be_true
+  end
+
+  it "allows to set application resource class as a symbol" do
+    MyApplicationResource = Class.new(Bulk::Resource)
+
+    Bulk::Resource.application_resource_class = :MyApplicationResource
+
+    resource_class = Bulk::Resource.send(:instantiate_resource_class, nil, :tasks)
+    resource_class.is_a?(MyApplicationResource).should be_true
+  end
+
+  it "tries to use ApplicationResource class as default" do
+    resource_class = Bulk::Resource.send(:instantiate_resource_class, nil, :tasks)
+    resource_class.is_a?(ApplicationResource).should be_true
   end
 
   it "should allow to set resource class" do
