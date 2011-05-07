@@ -1,2 +1,2 @@
-class <%= class_name %>Resource < Bulk::Resource
+class <%= class_name %>Resource < ApplicationResource
 end

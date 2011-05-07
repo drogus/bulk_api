@@ -15,7 +15,7 @@ describe 'Bulk::Resource generator' do
     destination_root.should have_structure {
       directory "app/bulk" do
         file "task_resource.rb" do
-          contains "class TaskResource < Bulk::Resource\nend\n"
+          contains "class TaskResource < ApplicationResource\nend\n"
         end
       end
     }
