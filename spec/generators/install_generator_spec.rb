@@ -20,6 +20,7 @@ describe 'Install generator' do
     destination_root.should have_structure {
       file "config/routes.rb" do
         contains 'bulk_routes "/api/bulk"'
+        contains 'mount Bulk::Sproutcore.new => "/_sproutcore"'
       end
 
       file "app/bulk/application_resource.rb" do

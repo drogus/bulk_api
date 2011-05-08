@@ -13,6 +13,7 @@ DESC
 
       def routes_entry
         route 'bulk_routes "/api/bulk"'
+        route 'mount Bulk::Sproutcore.new => "/_sproutcore"'
       end
 
       def copy_app_bulk_application_resource
