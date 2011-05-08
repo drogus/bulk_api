@@ -76,7 +76,7 @@ module Bulk
           collection = resource_object.send(method, hash)
           as_json = resource_object.send(:as_json, resource_object.send(:klass))
           options = {:only_ids => (method == 'delete'), :as_json => as_json}
-          response.deep_merge! collection.to_hash(resource_object.plural_resource_name.to_sym, options)
+          response.deep_merge! collection.to_hash(resource_object.resource_name.to_sym, options)
         end
 
         { :json => response }
@@ -165,10 +165,6 @@ module Bulk
         end
       end
       collection
-    end
-
-    def plural_resource_name
-      resource_name.to_s.pluralize
     end
 
     def resource_name
