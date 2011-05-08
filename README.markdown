@@ -1,3 +1,10 @@
+# WARNING: Still under heavy maintenance ;)
+
+I think I should write that this gem is not yet production
+ready and it will probably take some API changes without deprecation
+warnings, so you should probably wait a bit if you want
+to use that.
+
 # Bulk Rails API
 
 Bulk Rails API plugin makes integrating Sproutcore applications with Rails applications dead simple. It handles all the communication and allows to take advantage of bulk operations, which can make your application much faster. To use that plugin you will also need BulkDataSource, which will handle Sproutcore side of communcation.
