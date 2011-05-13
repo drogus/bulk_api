@@ -81,9 +81,9 @@ module Bulk
 
         { :json => response }
       rescue AuthenticationError
-        { :status => 401 }
+        { :status => 401, :json => {} }
       rescue AuthorizationError
-        { :status => 403 }
+        { :status => 403, :json => {} }
       end
 
       def instantiate_resource_class(controller, resource)

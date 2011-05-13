@@ -143,4 +143,32 @@ describe Bulk::Engine do
       }.should_not change(Project, :count)
     end
   end
+
+  context "with custom application class" do
+    before { clean_application_resource_class }
+
+    it "should properly render 401 response on auth error" do
+      klass = Class.new(Bulk::Resource) do
+        def authenticate(action)
+          false
+        end
+      end
+      Bulk::Resource.application_resource_class = klass
+
+      get "/api/bulk"
+      last_response.status.should == 401
+    end
+
+    it "should properly render 403 response on authorization error" do
+      klass = Class.new(Bulk::Resource) do
+        def authorize(action)
+          false
+        end
+      end
+      Bulk::Resource.application_resource_class = klass
+
+      get "/api/bulk"
+      last_response.status.should == 403
+    end
+  end
 end
