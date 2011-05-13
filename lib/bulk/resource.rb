@@ -38,7 +38,7 @@ module Bulk
         if base.name == application_resource_class.to_s
           base.abstract!
         elsif base.name =~ /(.*)Resource$/
-          base.resource_name($1.underscore.singularize)
+          base.resource_name($1.underscore.pluralize)
         end
       end
 

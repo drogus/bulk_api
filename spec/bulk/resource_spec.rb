@@ -1046,6 +1046,12 @@ describe Bulk::Resource do
     end
   end
 
+  class FooResource < Bulk::Resource
+  end
+  it "should set pluralized resource_name" do
+    FooResource.resource_name.should == "foos"
+  end
+
   describe "subclassed resource" do
     before do
       TaskResource = Class.new(ApplicationResource)
