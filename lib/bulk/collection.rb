@@ -36,7 +36,7 @@ module Bulk
       each do |id, record|
         next if errors.get(id)
         response[name] ||= []
-        response[name] << (only_ids ? record.id : record.as_json(options[:as_json]) )
+        response[name] << (only_ids ? record.id : record.as_json(options[:as_json_options]) )
       end
 
       errors.each do |id, error|

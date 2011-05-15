@@ -214,10 +214,10 @@ describe Bulk::Resource do
     end
   end
 
-  context "as_json" do
+  context "as_json_options" do
     before do
       @klass = create_application_resource_class do
-        def as_json(klass)
+        def as_json_options(klass)
           case klass.name
           when "Project"
             { :only => [:name] }
@@ -258,7 +258,7 @@ describe Bulk::Resource do
           resource_class Task
           resource_name :tasks
 
-          def as_json(klass)
+          def as_json_options(klass)
             { :only => [:done] }
           end
         end
@@ -270,7 +270,7 @@ describe Bulk::Resource do
         Object.send(:remove_const, :TaskResource)
       end
 
-      it "should override as_json attributes on get" do
+      it "should override as_json_options attributes on get" do
         result = standard_get
         expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
         result.should include_json(:json => expected)
@@ -278,7 +278,7 @@ describe Bulk::Resource do
         result.should_not include_json(:json => not_expected)
       end
 
-      it "should override as_json attributes on create" do
+      it "should override as_json_options attributes on create" do
         result = standard_create
         expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
         result.should include_json(:json => expected)
@@ -286,7 +286,7 @@ describe Bulk::Resource do
         result.should_not include_json(:json => not_expected)
       end
 
-      it "should override as_json attributes on update" do
+      it "should override as_json_options attributes on update" do
         result = standard_update
         expected = { :tasks => [{:done => true}], :projects => [{:name => 'project'}] }
         result.should include_json(:json => expected)

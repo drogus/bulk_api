@@ -7,7 +7,7 @@ describe Bulk::Collection do
   it "applies as_json options to the records" do
     item.should_receive(:as_json).with({ :only => [:something] }).and_return({:something => "something"})
     collection.set(1, item)
-    hash = collection.to_hash(:items, :as_json => {:only => [:something]})
+    hash = collection.to_hash(:items, :as_json_options => {:only => [:something]})
   end
 
   it "can be converted to hash" do
