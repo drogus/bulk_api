@@ -1,4 +1,3 @@
-* allow to inherit for Bulk::Resource directly
 * fix setting resource_name (it sets the name, but Bulk::Resource will look for a class based on a resource class name anyway)
 * refactor handling responses
 * do not always fetch all the records
