@@ -1075,4 +1075,66 @@ describe Bulk::Resource do
 
     it_behaves_like "Bulk::Resource subclass"
   end
+
+  context "when overriding actions" do
+    before do
+      TaskResource = Class.new(ApplicationResource) do
+        cattr_accessor :results
+        self.results = []
+        delegate :results, :to => "self.class"
+
+        def authenticate_record(action, record); results << :authenticate_record end
+        def authenticate_records(action, klass); results << :authenticate_records end
+        def authorize_record(action, record); results << :authorize_record end
+        def authorize_records(action, record); results << :authorize_records end
+
+        def get(ids)
+          super(ids) do |ids|
+            results << 'get'
+            Task.all
+          end
+        end
+
+        def create(hashes)
+          super(hashes) do |task|
+            results << "task new: #{task.new_record?}"
+          end
+        end
+
+        def update(hashes)
+          super(hashes) do |task|
+            results << "title changed: #{task.title_changed?}"
+          end
+        end
+
+        def delete(ids)
+          super(ids) do |task|
+            results << 'delete'
+          end
+        end
+      end
+
+      TaskResource.resource_class Task
+      TaskResource.resource_name :tasks
+    end
+
+    after do
+      Object.send(:remove_const, :TaskResource)
+    end
+
+    specify "block should be run instead of fetching records" do
+      standard_get.should include_json(:json => {:tasks => [{:title => "task"}]})
+      TaskResource.results.should == [:authenticate_records, :authorize_records, 'get', :authenticate_record, :authorize_record]
+    end
+
+    specify "block should be run before creating record" do
+      standard_create.should include_json(:json => {:tasks => [{:title => "task"}]})
+      TaskResource.results.should == [:authenticate_records, :authorize_records, 'task new: true', :authenticate_record, :authorize_record]
+    end
+
+    specify "block should be run before updating" do
+      standard_update.should include_json(:json => {:tasks => [{:title => "task"}]})
+      TaskResource.results.should == [:authenticate_records, :authorize_records, 'title changed: true', :authenticate_record, :authorize_record]
+    end
+  end
 end

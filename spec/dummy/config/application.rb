@@ -8,6 +8,8 @@ require "action_mailer/railtie"
 
 Bundler.require
 require "bulk_api"
+require "sass/util"
+require "haml/util"
 
 module Dummy
   class Application < Rails::Application

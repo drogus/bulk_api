@@ -107,10 +107,14 @@ module Bulk
     end
 
     def get(ids = 'all')
-      all = ids.to_s == 'all'
+      ids = ids.to_s == 'all' ? nil : ids
       collection = Collection.new
-      with_records_auth :get, collection, (all ? nil : ids) do
-        records = all ? klass.all : klass.where(:id => ids)
+      with_records_auth :get, collection, ids do
+        records = if block_given?
+          yield ids
+        else
+          ids ? klass.where(:id => ids) : klass.all
+        end
         records.each do |r|
           with_record_auth :get, collection, r.id, r do
             collection.set(r.id, r)
@@ -128,6 +132,7 @@ module Bulk
           local_id = attrs.delete(:_local_id)
           record = klass.new(filter_params(attrs))
           record[:_local_id] = local_id
+          yield record if block_given?
           with_record_auth :create, collection, local_id, record do
             record.save
             set_with_validity_check(collection, local_id, record)
@@ -144,8 +149,10 @@ module Bulk
         hashes.each do |attrs|
           attrs.delete(:_local_id)
           record = klass.where(:id => attrs[:id]).first
+          record.attributes = filter_params(attrs)
+          yield record if block_given?
           with_record_auth :update, collection, record.id, record do
-            record.update_attributes(filter_params(attrs))
+            record.save
             set_with_validity_check(collection, record.id, record)
           end
         end
@@ -158,6 +165,7 @@ module Bulk
       with_records_auth :delete, collection, ids do
         ids.each do |id|
           record = klass.where(:id => id).first
+          yield record if block_given?
           with_record_auth :delete, collection, record.id, record do
             record.destroy
             set_with_validity_check(collection, record.id, record)
