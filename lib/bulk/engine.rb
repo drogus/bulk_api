@@ -8,6 +8,10 @@ module Bulk
     end
 
     initializer "require sproutcore Rack app" do
+      # fix some failz from sass and haml, TODO: investigate
+      require 'haml/util'
+      require 'sass/util'
+
       # it needs to be done after rails load, otherwise haml freaks out
       require 'bulk/sproutcore'
     end
