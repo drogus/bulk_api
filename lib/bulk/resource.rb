@@ -30,7 +30,7 @@ module Bulk
       end
 
       def application_resource_class
-        @application_resource_class ||= ApplicationResource
+        @application_resource_class ||= "ApplicationResource"
         @application_resource_class.is_a?(Class) ? @application_resource_class : Object.const_get(@application_resource_class.to_sym)
       end
 
