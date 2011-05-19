@@ -16,7 +16,9 @@ module Bulk
       require 'bulk/sproutcore'
     end
 
-    config.paths.add "app/bulk", :eager_load => true
-    config.paths.add "app/sproutcore"
+    initializer "config paths" do |app|
+      app.config.paths.add "app/bulk", :eager_load => true
+      app.config.paths.add "app/sproutcore"
+    end
   end
 end
