@@ -33,12 +33,13 @@ YourApp = SC.Application.create({
 });
 ```
 
-The last thing that you need to do is to set resource names for your models. BulkDataSource assumes that you have resourceName attribute set on your record. If you don't have such attributes, you can add it like that:
+The last thing that you need to do is to set resource names for your models. BulkDataSource assumes that you have resourceName attribute set on your model. If you don't have such attributes, you can add it like that:
 
 ```javascript
 Todos.Todo = SC.Record.extend({
-  resourceName: 'todo'
-})
+  // your code here
+});
+Todos.Todo.resourceName = 'todo';
 ```
 
 ## Usage
