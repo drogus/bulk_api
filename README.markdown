@@ -9,9 +9,15 @@ to use that.
 
 Bulk Rails API plugin makes integrating Sproutcore applications with Rails applications dead simple. It handles all the communication and allows to take advantage of bulk operations, which can make your application much faster. To use that plugin you will also need BulkDataSource, which will handle Sproutcore side of communcation.
 
-## Installing:
+## Installing
 
-### Rails app:
+After following this guide you will have a setup like this:
+
+  * `$RAILS_ROOT/app/sproutcore` is the path where your sproutcore application lives
+  * `/api/bulk` is routed to serve the API
+  * `/_sproutcore` is routed to serve your sproutcore application
+
+### Rails
 
 Add this line to Gemfile and run bundle install:
 
@@ -25,7 +31,23 @@ To set up Bulk API in your Rails app:
 rails generate bulk:install
 ```
 
-Now you need to configure it in your application. First thing to do is to use it with your store:
+### Sproutcore
+
+Now you need to configure your application. Install `BulkDataSource`:
+
+```
+cd <sproutcore_root>
+mkdir frameworks # In case it does not exist yet
+git clone https://github.com/drogus/bulk_data_source.git frameworks/bulk_data_source
+```
+
+Change your `Buildfile` to include it:
+
+```ruby
+config :all, :required => [:sproutcore, "sproutcore/core_foundation", "bulk_data_source"]
+```
+
+Configure your store:
 
 ```javascript
 YourApp = SC.Application.create({
@@ -33,7 +55,7 @@ YourApp = SC.Application.create({
 });
 ```
 
-The last thing that you need to do is to set resource names for your models. BulkDataSource assumes that you have resourceName attribute set on your model. If you don't have such attributes, you can add it like that:
+The last thing that you need to do is to set resource names for your models. `BulkDataSource` assumes that you have resourceName attribute set on your model. If you don't have such attributes, you can add it like that:
 
 ```javascript
 Todos.Todo = SC.Record.extend({
