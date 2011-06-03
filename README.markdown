@@ -31,9 +31,6 @@ To set up Bulk API in your Rails app:
 rails generate bulk:install
 ```
 
-By default, the API endpoint is  `/api/bulk` and a sproutcore server is mounted to `/\_sproutcore`. You can customize this in your `config/routes.rb`.
-This will add something like this to your `config/routes.rb`:
-
 ### Sproutcore
 
 Now you need to configure your application. Install `BulkDataSource`:
