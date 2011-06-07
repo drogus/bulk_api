@@ -9,6 +9,10 @@ to use that.
 
 Bulk Rails API plugin makes integrating Sproutcore applications with Rails applications dead simple. It handles all the communication and allows to take advantage of bulk operations, which can make your application much faster. To use that plugin you will also need BulkDataSource, which will handle Sproutcore side of communcation.
 
+## Example
+
+https://github.com/drnic/todos-bulk-api-demo
+
 ## Installing
 
 After following this guide you will have a setup like this:
