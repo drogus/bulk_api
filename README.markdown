@@ -324,11 +324,11 @@ The point of using bulk API is to cut the requests number. Because of its nature
 POST /bulk/api
 {
   'todos': [
-    {'title': "First todo", 'done': false, '_storeKey': '3'},
-    {'title': "Second todo", 'done': true, '_storeKey': '10'}
+    {'title': "First todo", 'done': false, '_local_id': '3'},
+    {'title': "Second todo", 'done': true, '_local_id': '10'}
   ],
   'projects': [
-    {'name': "Sproutcore todolist", '_storeKey': '12'}
+    {'name': "Sproutcore todolist", '_local_id': '12'}
   ]
 }
 ```
@@ -338,10 +338,10 @@ As you can see we POST some new items to our application. Rails application will
 ```
 {
   'todos': [
-    {'id': 1, 'title': "First todo", 'done': false, '_storeKey': '3'}
+    {'id': 1, 'title': "First todo", 'done': false, '_local_id': '3'}
   ],
   'projects': [
-    {'id': 1, 'name': "Sproutcore todolist", '_storeKey': '12'}
+    {'id': 1, 'name': "Sproutcore todolist", '_local_id': '12'}
   ]
   'errors': {
     'todos': {
