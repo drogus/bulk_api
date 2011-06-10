@@ -1,3 +1,5 @@
+require 'active_support/hash_with_indifferent_access'
+
 module Bulk
   class AuthenticationError < StandardError; end
   class AuthorizationError < StandardError; end
@@ -5,7 +7,7 @@ module Bulk
   class Resource
 
     attr_reader :request
-    delegate :session, :params, :to => :request
+    delegate :session, :to => :request
     delegate :resource_class, :to => "self.class"
     @@resources = []
 
@@ -69,7 +71,8 @@ module Bulk
           raise AuthorizationError unless application_resource.authorize(method)
         end
 
-        request.params.each do |resource, hash|
+        # FIXME: Params should be handled nicely
+        request.params.with_indifferent_access.each do |resource, hash|
           next unless resources.blank? || resources.include?(resource.to_sym)
           resource_object = instantiate_resource_class(request, resource)
           next unless resource_object
@@ -164,7 +167,7 @@ module Bulk
       collection = Collection.new
       with_records_auth :delete, collection, ids do
         ids.each do |id|
-          record = klass.where(:id => id).first
+          record = klass.find(id)
           yield record if block_given?
           with_record_auth :delete, collection, record.id, record do
             record.destroy
