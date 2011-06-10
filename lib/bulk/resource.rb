@@ -1,11 +1,13 @@
+require 'active_support/hash_with_indifferent_access'
+
 module Bulk
   class AuthenticationError < StandardError; end
   class AuthorizationError < StandardError; end
 
   class Resource
 
-    attr_reader :controller
-    delegate :session, :params, :to => :controller
+    attr_reader :request
+    delegate :session, :to => :request
     delegate :resource_class, :to => "self.class"
     @@resources = []
 
@@ -43,8 +45,8 @@ module Bulk
       end
 
       %w/get create update delete/.each do |method|
-        define_method(method) do |controller|
-          handle_response(method, controller)
+        define_method(method) do |request|
+          handle_response(method, request)
         end
       end
 
@@ -57,9 +59,9 @@ module Bulk
       private
 
       # TODO: refactor this to some kind of Response class
-      def handle_response(method, controller)
+      def handle_response(method, request)
         response = {}
-        application_resource = application_resource_class.new(controller, :abstract => true)
+        application_resource = application_resource_class.new(request, :abstract => true)
 
         if application_resource.respond_to?(:authenticate)
           raise AuthenticationError unless application_resource.authenticate(method)
@@ -69,9 +71,10 @@ module Bulk
           raise AuthorizationError unless application_resource.authorize(method)
         end
 
-        controller.params.each do |resource, hash|
+        # FIXME: Params should be handled nicely
+        request.params.with_indifferent_access.each do |resource, hash|
           next unless resources.blank? || resources.include?(resource.to_sym)
-          resource_object = instantiate_resource_class(controller, resource)
+          resource_object = instantiate_resource_class(request, resource)
           next unless resource_object
           collection = resource_object.send(method, hash)
           as_json_options = resource_object.send(:as_json_options, resource_object.send(:klass))
@@ -86,20 +89,20 @@ module Bulk
         { :status => 403, :json => {} }
       end
 
-      def instantiate_resource_class(controller, resource)
+      def instantiate_resource_class(request, resource)
         begin
-          "#{resource.to_s.singularize}_resource".classify.constantize.new(controller)
+          "#{resource.to_s.singularize}_resource".classify.constantize.new(request)
         rescue NameError
           begin
-            application_resource_class.new(controller, :resource_name => resource)
+            application_resource_class.new(request, :resource_name => resource)
           rescue NameError
           end
         end
       end
     end
 
-    def initialize(controller, options = {})
-      @controller = controller
+    def initialize(request, options = {})
+      @request = request
       @resource_name = options[:resource_name].to_s if options[:resource_name]
 
       # try to get klass to raise error early if something is not ok
@@ -164,7 +167,7 @@ module Bulk
       collection = Collection.new
       with_records_auth :delete, collection, ids do
         ids.each do |id|
-          record = klass.where(:id => id).first
+          record = klass.find(id)
           yield record if block_given?
           with_record_auth :delete, collection, record.id, record do
             record.destroy
