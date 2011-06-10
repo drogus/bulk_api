@@ -4,25 +4,25 @@ class Bulk::ApiController < ActionController::Base
   wrap_parameters :format => [] if respond_to?(:wrap_parameters)
 
   def get
-    options = Bulk::Resource.get(self)
+    options = Bulk::Resource.get(request)
     yield options if block_given?
     render options
   end
 
   def create
-    options = Bulk::Resource.create(self)
+    options = Bulk::Resource.create(request)
     yield options if block_given?
     render options
   end
 
   def update
-    options = Bulk::Resource.update(self)
+    options = Bulk::Resource.update(request)
     yield options if block_given?
     render options
   end
 
   def delete
-    options = Bulk::Resource.delete(self)
+    options = Bulk::Resource.delete(request)
     yield options if block_given?
     render options
   end
