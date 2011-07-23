@@ -55,7 +55,7 @@ Configure your store:
 
 ```javascript
 YourApp = SC.Application.create({
-  store: SC.Store.create().from('SC.BulkDataSource')
+  store: SC.Store.create().from('BulkApi.BulkDataSource')
 });
 ```
 
