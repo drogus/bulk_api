@@ -214,6 +214,28 @@ describe Bulk::Resource do
     end
   end
 
+  context "as_json" do
+    before do
+      @klass = create_application_resource_class do
+        def as_json(hash)
+          if hash[:tasks]
+            hash[:tasks] = [{ :foo => "bar" }]
+          elsif hash[:projects]
+            hash[:projects] = [{ :foo => "baz" }]
+          end
+
+          hash
+        end
+      end
+    end
+
+    it "should run as_json on given hash" do
+      result = standard_get
+      expected = { :tasks => [{:foo => "bar"}], :projects => [{:foo => "baz"}] }
+      result.should include_json(:json => expected)
+    end
+  end
+
   context "as_json_options" do
     before do
       @klass = create_application_resource_class do

@@ -76,7 +76,8 @@ module Bulk
           collection = resource_object.send(method, hash)
           as_json_options = resource_object.send(:as_json_options, resource_object.send(:klass))
           options = {:only_ids => (method == 'delete'), :as_json_options => as_json_options}
-          response.deep_merge! collection.to_hash(resource_object.resource_name.to_sym, options)
+          hash = resource_object.send(:as_json, collection.to_hash(resource_object.resource_name.to_sym, options))
+          response.deep_merge! hash
         end
 
         { :json => response }
@@ -181,6 +182,10 @@ module Bulk
 
     def as_json_options(klass)
       {}
+    end
+
+    def as_json(hash)
+      hash
     end
 
     private
