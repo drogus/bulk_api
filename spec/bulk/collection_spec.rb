@@ -4,6 +4,20 @@ describe Bulk::Collection do
   let(:collection) { Bulk::Collection.new }
   let(:item) { mock("item", :id => 3, :as_json => "item_3_as_json") }
 
+  it "should not allow to modify as_json_options" do
+    class << item
+      def as_json(options)
+        options[:foo] = "baz"
+      end
+    end
+
+    collection.set(1, item)
+    as_json_options = {:foo => "bar"}
+    hash = collection.to_hash(:items, :as_json_options => as_json_options)
+
+    as_json_options[:foo].should == "bar"
+  end
+
   it "applies as_json options to the records" do
     item.should_receive(:as_json).with({ :only => [:something] }).and_return({:something => "something"})
     collection.set(1, item)
