@@ -295,7 +295,7 @@ While overriding records you can use super to handle the actions with default be
 Bulk::Collection is a container for records and is used to construct response from. It has a few handy methods to easily modify collection, for more please refer to documantation.
 
 ```ruby
-collection = Bulk::Colection.new
+collection = Bulk::Collection.new
 collection.set(1, record) # add record with identifier '1', identifier is then used while constructing response
                           # most of the time it's id or _local_id (the latter one is mainly for create)
 
