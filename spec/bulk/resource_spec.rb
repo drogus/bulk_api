@@ -329,7 +329,7 @@ describe Bulk::Resource do
 
     it "should pass only params that are returned by params_accessible" do
       params = {
-        :projects => [{:_local_id => '10', :name => 'SproutCore', :description => 'Great project'}],
+        :projects => [{:_local_id => '10', 'name' => 'SproutCore', :description => 'Great project'}],
         :tasks => [{:_local_id => '5', :title => 'My task', :done => true }]
       }
       controller = mock("controller", :params => params)

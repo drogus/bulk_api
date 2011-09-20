@@ -266,7 +266,7 @@ module Bulk
 
       if filter
         attributes.delete_if do |k, v|
-          delete_if = filter.include?(k)
+          delete_if = filter.include?(k.to_sym)
           type == :accessible ? !delete_if : delete_if
         end
       end
