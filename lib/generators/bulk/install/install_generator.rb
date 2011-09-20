@@ -4,16 +4,11 @@ module Bulk
 
       desc <<DESC
 Description:
-    Creates initializer with configuration and adds required routes
+    Creates initializer with configuration.
 DESC
 
       def self.source_root
         @source_root ||= File.expand_path(File.join(File.dirname(__FILE__), 'templates'))
-      end
-
-      def routes_entry
-        route 'bulk_routes "/api/bulk"'
-        route 'mount Bulk::Sproutcore.new => "/_sproutcore"'
       end
 
       def copy_app_bulk_application_resource
