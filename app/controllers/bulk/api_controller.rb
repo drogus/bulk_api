@@ -3,7 +3,7 @@ class Bulk::ApiController < ActionController::Base
   def get
     options = Bulk::Resource.get(self)
     yield options if block_given?
-    render :json => options
+    render options
   end
 
   def create
