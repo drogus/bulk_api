@@ -114,7 +114,7 @@ module Bulk
         records = if block_given?
           yield ids
         else
-          ids ? klass.where(:id => ids) : klass.all
+          ids ? klass.where(:id => ids) : klass.limit(100)
         end
         records.each do |r|
           with_record_auth :get, collection, r.id, r do

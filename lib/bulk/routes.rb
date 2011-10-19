@@ -5,6 +5,7 @@ module ActionDispatch::Routing
       post   path => "bulk/api#create"
       put    path => "bulk/api#update"
       delete path => "bulk/api#delete"
+      match "/api/bulk", :controller => "bulk/api", :action => 'options', :constraints => {:method => 'OPTIONS'}
     end
   end
 
