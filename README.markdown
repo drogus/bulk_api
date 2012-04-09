@@ -1,9 +1,6 @@
-# WARNING: Still under heavy maintenance ;)
+# DEPREATED
 
-I think I should write that this gem is not yet production
-ready and it will probably take some API changes without deprecation
-warnings, so you should probably wait a bit if you want
-to use that.
+This gem was kind of an experiment to automate API creation for easy integration with javascript clients (primarly sproutcore, now known as [Ember](http://emberjs.com/)). Unfortunately after using it in reality, it turns out that this kind of automation of bulk operations can be hard with complicated APIs. Currently I have no plans to continue development and I use presenters and regular controllers for creating APIs for Ember. One example of such approach is [active model serializers](https://github.com/josevalim/active_model_serializers). If you want to maintaint `bulk_api`, please fork and let me know.
 
 # Bulk Rails API
 
